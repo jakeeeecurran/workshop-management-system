@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: vehicle-prep-backend
+    env: node
+    buildCommand: 'npm install'
+    startCommand: 'npm start'
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+    autoDeploy: true
+    routes:
+      - type: rewrite
+        source: /api/**
+        destination: /api/$1
+      - type: static
+        source: /
+        destination: /public/index.html 

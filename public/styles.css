@@ -1,0 +1,338 @@
+/* styles.css - Modern, advanced, glassy/neumorphic look for Workshop and Admin Portal */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'Segoe UI', Arial, system-ui, sans-serif;
+  background: linear-gradient(135deg, #181c24 0%, #232a34 100%);
+  color: #f7f7fa;
+  min-height: 100vh;
+  overflow: hidden;
+  letter-spacing: 0.01em;
+}
+
+/* Glassmorphic Sidebar */
+.sidebar {
+  width: 300px;
+  min-width: 220px;
+  background: rgba(30, 34, 44, 0.85);
+  box-shadow: 8px 0 32px #0008;
+  backdrop-filter: blur(16px) saturate(1.2);
+  border-right: 1.5px solid rgba(255,255,255,0.08);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 2.5rem 0 2.5rem 0;
+  z-index: 10;
+}
+.sidebar nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.sidebar nav ul li {
+  margin: 0;
+}
+.sidebar nav ul li a {
+  display: block;
+  color: #f7f7fa;
+  text-decoration: none;
+  padding: 1.5rem 2.5rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  border-left: 6px solid transparent;
+  border-radius: 0 2rem 2rem 0;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  letter-spacing: 0.03em;
+}
+.sidebar nav ul li a.active, .sidebar nav ul li a:hover {
+  background: rgba(0, 116, 217, 0.18);
+  border-left: 6px solid #ffdc00;
+  color: #ffdc00;
+}
+
+/* Main Area */
+.admin-main {
+  flex: 1;
+  padding: 3rem 6vw;
+  overflow-y: auto;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+#login-section, #admin-section {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  margin-top: 3rem;
+}
+
+/* Modern Form Styles */
+#vehicle-form, #login-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  margin-bottom: 2.5rem;
+  background: rgba(36, 40, 54, 0.85);
+  padding: 2rem 2.5rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 6px 32px #0005, 0 1.5px 0 #fff1 inset;
+  align-items: flex-end;
+}
+#vehicle-form input, #vehicle-form button, #login-form input, #login-form button {
+  font-size: 1.2rem;
+  padding: 0.9em 1.2em;
+  border-radius: 0.7em;
+  border: none;
+  margin-right: 0.5rem;
+  background: rgba(255,255,255,0.07);
+  color: #f7f7fa;
+  box-shadow: 0 1.5px 0 #fff1 inset;
+  outline: none;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+#vehicle-form input:focus, #login-form input:focus {
+  background: rgba(0,116,217,0.13);
+  box-shadow: 0 0 0 2px #0074d9aa;
+}
+#vehicle-form button, #login-form button {
+  background: linear-gradient(90deg, #0074d9 0%, #00c3ff 100%);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px #0074d955;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+#vehicle-form button#cancel-edit {
+  background: linear-gradient(90deg, #888 0%, #bbb 100%);
+  color: #222;
+}
+#vehicle-form button:active, #login-form button:active {
+  filter: brightness(0.93);
+}
+
+/* Error Message */
+#error-message, .error-message {
+  color: #ff4136;
+  margin-top: 1rem;
+  font-weight: bold;
+  font-size: 1.1rem;
+  letter-spacing: 0.02em;
+}
+
+/* Admin Vehicle List */
+#admin-vehicles-list {
+  margin-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+.admin-vehicle-item {
+  background: rgba(36, 40, 54, 0.92);
+  border-radius: 1.5rem;
+  padding: 2rem 2.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 6px 32px #0005, 0 1.5px 0 #fff1 inset;
+  font-size: 1.2rem;
+  position: relative;
+  border-left: 8px solid #0074d9;
+  transition: box-shadow 0.2s, border-color 0.2s, opacity 0.2s;
+}
+.admin-vehicle-item.complete {
+  opacity: 0.5;
+  border-left: 8px solid #2ecc40;
+}
+.admin-vehicle-item .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+.admin-vehicle-item .tag {
+  background: linear-gradient(90deg, #0074d9 0%, #00c3ff 100%);
+  color: #fff;
+  border-radius: 0.7rem;
+  padding: 0.4em 1em;
+  font-size: 1.05rem;
+  font-weight: 700;
+  box-shadow: 0 1.5px 0 #fff1 inset;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 4px #0008;
+}
+.admin-vehicle-item .admin-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 1rem;
+}
+.admin-vehicle-item button {
+  font-size: 1.1rem;
+  padding: 0.5em 1.3em;
+  border: none;
+  border-radius: 0.7em;
+  cursor: pointer;
+  font-weight: 800;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px #0074d955;
+}
+.admin-vehicle-item button.edit-btn {
+  background: linear-gradient(90deg, #ffdc00 0%, #ffe066 100%);
+  color: #222;
+}
+.admin-vehicle-item button.delete-btn {
+  background: linear-gradient(90deg, #ff4136 0%, #ff6f61 100%);
+  color: #fff;
+}
+.admin-vehicle-item button.complete-btn {
+  background: linear-gradient(90deg, #2ecc40 0%, #6fff8f 100%);
+  color: #222;
+}
+.admin-vehicle-item button:active {
+  filter: brightness(0.93);
+}
+
+/* Workshop Display Styles */
+.workshop-body {
+  background: linear-gradient(135deg, #181c24 0%, #232a34 100%);
+}
+.tiles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+  gap: 2.5rem;
+  padding: 3rem;
+  height: 100vh;
+  box-sizing: border-box;
+  align-items: start;
+  overflow-y: auto;
+}
+.vehicle-tile {
+  background: rgba(36, 40, 54, 0.92);
+  border-radius: 2rem;
+  box-shadow: 0 8px 40px #0007, 0 2px 0 #fff1 inset;
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.3rem;
+  font-size: 1.7rem;
+  min-height: 380px;
+  position: relative;
+  border: 5px solid #232a34;
+  transition: border 0.2s, box-shadow 0.2s, opacity 0.2s;
+  backdrop-filter: blur(8px) saturate(1.1);
+}
+.vehicle-tile.complete {
+  opacity: 0.5;
+  border-color: #2ecc40;
+}
+.vehicle-tile .tile-header {
+  font-size: 2.3rem;
+  font-weight: 800;
+  margin-bottom: 0.7rem;
+  letter-spacing: 0.04em;
+  color: #ffdc00;
+  text-shadow: 0 2px 8px #000a;
+}
+.vehicle-tile .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+.vehicle-tile .tag {
+  background: linear-gradient(90deg, #0074d9 0%, #00c3ff 100%);
+  color: #fff;
+  border-radius: 0.7rem;
+  padding: 0.4em 1em;
+  font-size: 1.1rem;
+  font-weight: 700;
+  box-shadow: 0 1.5px 0 #fff1 inset;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 4px #0008;
+}
+.vehicle-tile .tile-actions {
+  display: flex;
+  gap: 1.2rem;
+  margin-top: auto;
+}
+.vehicle-tile button {
+  font-size: 1.3rem;
+  padding: 0.7em 1.5em;
+  border: none;
+  border-radius: 0.7em;
+  cursor: pointer;
+  font-weight: 800;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px #0074d955;
+}
+.vehicle-tile button.complete-btn {
+  background: linear-gradient(90deg, #2ecc40 0%, #6fff8f 100%);
+  color: #222;
+}
+.vehicle-tile button.edit-btn {
+  background: linear-gradient(90deg, #ffdc00 0%, #ffe066 100%);
+  color: #222;
+}
+.vehicle-tile button:active {
+  filter: brightness(0.93);
+}
+
+/* In-place Edit Form (Workshop) */
+.vehicle-tile.edit-tile input {
+  font-size: 1.1rem;
+  padding: 0.7em 1em;
+  border-radius: 0.7em;
+  border: none;
+  background: rgba(255,255,255,0.07);
+  color: #f7f7fa;
+  margin-bottom: 0.7rem;
+  box-shadow: 0 1.5px 0 #fff1 inset;
+  outline: none;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.vehicle-tile.edit-tile input:focus {
+  background: rgba(0,116,217,0.13);
+  box-shadow: 0 0 0 2px #0074d9aa;
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+  .tiles-grid {
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    padding: 2rem;
+  }
+  .sidebar {
+    width: 180px;
+    padding: 1.2rem 0;
+  }
+}
+@media (max-width: 900px) {
+  .tiles-grid {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+  .sidebar {
+    width: 100px;
+    padding: 0.5rem 0;
+  }
+  .admin-main {
+    padding: 1rem 2vw;
+  }
+}
+
+/* Modern Scrollbar */
+.tiles-grid, .admin-main, .sidebar, #admin-vehicles-list {
+  scrollbar-width: thin;
+  scrollbar-color: #0074d9 #232a34;
+}
+.tiles-grid::-webkit-scrollbar, .admin-main::-webkit-scrollbar, .sidebar::-webkit-scrollbar, #admin-vehicles-list::-webkit-scrollbar {
+  width: 10px;
+  background: #232a34;
+}
+.tiles-grid::-webkit-scrollbar-thumb, .admin-main::-webkit-scrollbar-thumb, .sidebar::-webkit-scrollbar-thumb, #admin-vehicles-list::-webkit-scrollbar-thumb {
+  background: #0074d9;
+  border-radius: 8px;
+} 
