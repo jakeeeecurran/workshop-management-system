@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Vehicle - Workshop Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group.half-width {
+            grid-column: span 1;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #667eea;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <h1>➕ Add Vehicle</h1>
+                <a href="index.html" class="nav-btn">🏠 Home</a>
+            </div>
+            
+            <form id="workshopForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="stockNumber">Stock Number</label>
+                        <input type="text" id="stockNumber" name="stockNumber" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="roNumber">RO Number</label>
+                        <input type="text" id="roNumber" name="roNumber" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="brand">Brand</label>
+                        <select id="brand" name="brand" required>
+                            <option value="">Select Brand</option>
+                            <option value="Volvo">Volvo</option>
+                            <option value="Jeep">Jeep</option>
+                            <option value="LDV">LDV</option>
+                            <option value="MG">MG</option>
+                            <option value="Used">Used</option>
+                            <option value="Polestar">Polestar</option>
+                            <option value="Leapmotor">Leapmotor</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="model">Model</label>
+                        <input type="text" id="model" name="model" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="colour">Colour</label>
+                        <input type="text" id="colour" name="colour" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="customerName">Customer Name</label>
+                        <input type="text" id="customerName" name="customerName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="salesperson">Salesperson</label>
+                        <select id="salesperson" name="salesperson" required>
+                            <option value="">Select Salesperson</option>
+                            <option value="Jake C.">Jake C.</option>
+                            <option value="Keith G.">Keith G.</option>
+                            <option value="Michael R.">Michael R.</option>
+                            <option value="Jason B.">Jason B.</option>
+                            <option value="Mark K.">Mark K.</option>
+                            <option value="Wendy B.">Wendy B.</option>
+                            <option value="Charles R.">Charles R.</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="requiredDateTime">Required Date & Time</label>
+                        <input type="datetime-local" id="requiredDateTime" name="requiredDateTime" required>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="onsite" name="onsite">
+                            <label for="onsite">Vehicle is Onsite</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label for="workRequired">Work Required</label>
+                        <textarea id="workRequired" name="workRequired" rows="4" placeholder="Enter each work item on a new line..." required></textarea>
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-btn">Add to Workshop Queue</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        class VehicleForm {
+            constructor() {
+                this.form = document.getElementById('workshopForm');
+                this.requiredDateTimeInput = document.getElementById('requiredDateTime');
+                
+                this.initialize();
+            }
+
+            initialize() {
+                // Set default datetime to now
+                const now = new Date();
+                const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                this.requiredDateTimeInput.value = localDateTime;
+
+                // Event listeners
+                this.form.addEventListener('submit', (e) => this.handleFormSubmit(e));
+            }
+
+            async handleFormSubmit(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this.form);
+                const entry = {
+                    id: Date.now().toString(),
+                    stockNumber: formData.get('stockNumber'),
+                    roNumber: formData.get('roNumber'),
+                    brand: formData.get('brand'),
+                    model: formData.get('model'),
+                    colour: formData.get('colour'),
+                    customerName: formData.get('customerName'),
+                    salesperson: formData.get('salesperson'),
+                    workRequired: formData.get('workRequired'),
+                    requiredDateTime: formData.get('requiredDateTime'),
+                    onsite: formData.get('onsite') === 'on',
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                };
+
+                const entries = JSON.parse(localStorage.getItem('workshopEntries')) || [];
+                entries.push(entry);
+                
+                // Try to save to server first, fallback to localStorage
+                try {
+                    await fetch('/api/data', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            entries: entries,
+                            completed: JSON.parse(localStorage.getItem('completedEntries')) || []
+                        })
+                    });
+                } catch (error) {
+                    console.error('Error saving to server:', error);
+                    localStorage.setItem('workshopEntries', JSON.stringify(entries));
+                }
+                
+                // Reset form
+                this.form.reset();
+                
+                // Reset datetime to now
+                const now = new Date();
+                const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                this.requiredDateTimeInput.value = localDateTime;
+                
+                // Show success message and redirect
+                alert('Vehicle added successfully!');
+                window.location.href = 'workshop-view.html';
+            }
+        }
+
+        // Initialize the form
+        const vehicleForm = new VehicleForm();
+    </script>
+</body>
+</html> 

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workshop Get-Ready Management System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .welcome-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 60px 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .welcome-card h1 {
+            color: #2d3748;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .welcome-card p {
+            color: #4a5568;
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .nav-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 30px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-btn.secondary {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .nav-btn.secondary:hover {
+            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .stat-card {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #4a5568;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .nav-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .welcome-card h1 {
+                font-size: 2.5rem;
+            }
+            
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="welcome-card">
+            <h1>🏗️ Workshop Management</h1>
+            <p>Welcome to the Vehicle Preparation Workshop Management System. Choose an option below to get started.</p>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="pendingCount">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="completedCount">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="urgentCount">0</div>
+                    <div class="stat-label">Urgent</div>
+                </div>
+            </div>
+            
+            <div class="nav-buttons">
+                <a href="add-vehicle.html" class="nav-btn">
+                    ➕ Add Vehicle
+                </a>
+                <a href="workshop-view.html" class="nav-btn secondary">
+                    📋 Workshop View
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load and display stats
+        function loadStats() {
+            const entries = JSON.parse(localStorage.getItem('workshopEntries')) || [];
+            const completed = JSON.parse(localStorage.getItem('completedEntries')) || [];
+            
+            const now = new Date();
+            const twoDaysFromNow = new Date(now.getTime() + (2 * 24 * 60 * 60 * 1000));
+            
+            const urgentCount = entries.filter(entry => 
+                new Date(entry.requiredDateTime) <= twoDaysFromNow && !entry.completed
+            ).length;
+            
+            document.getElementById('pendingCount').textContent = entries.length;
+            document.getElementById('completedCount').textContent = completed.length;
+            document.getElementById('urgentCount').textContent = urgentCount;
+        }
+        
+        loadStats();
+    </script>
+</body>
+</html> 

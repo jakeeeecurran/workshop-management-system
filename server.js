@@ -1,76 +1,60 @@
-// server.js
 const express = require('express');
-const fs = require('fs');
 const path = require('path');
-const cors = require('cors');
-
+const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DATA_FILE = path.join(__dirname, 'vehicles.json');
 
-app.use(cors());
+// Serve static files
+app.use(express.static(path.join(__dirname, '.')));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
-// Helper: Read vehicles from file
-function readVehicles() {
-  try {
-    const data = fs.readFileSync(DATA_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (err) {
-    return [];
-  }
-}
-
-// Helper: Write vehicles to file
-function writeVehicles(vehicles) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(vehicles, null, 2));
-}
-
-// GET all vehicles
-app.get('/api/vehicles', (req, res) => {
-  const vehicles = readVehicles();
-  res.json(vehicles);
+// API endpoints for data persistence
+app.get('/api/data', (req, res) => {
+    try {
+        const dataPath = path.join(__dirname, 'data');
+        if (!fs.existsSync(dataPath)) {
+            fs.mkdirSync(dataPath);
+        }
+        
+        const entriesPath = path.join(dataPath, 'workshopEntries.json');
+        const completedPath = path.join(dataPath, 'completedEntries.json');
+        
+        const entries = fs.existsSync(entriesPath) ? JSON.parse(fs.readFileSync(entriesPath, 'utf8')) : [];
+        const completed = fs.existsSync(completedPath) ? JSON.parse(fs.readFileSync(completedPath, 'utf8')) : [];
+        
+        res.json({ entries, completed });
+    } catch (error) {
+        console.error('Error reading data:', error);
+        res.status(500).json({ error: 'Failed to read data' });
+    }
 });
 
-// POST new vehicle
-app.post('/api/vehicles', (req, res) => {
-  const vehicles = readVehicles();
-  const newVehicle = {
-    ...req.body,
-    id: Date.now().toString(), // Simple unique ID
-    complete: false
-  };
-  vehicles.push(newVehicle);
-  writeVehicles(vehicles);
-  res.status(201).json(newVehicle);
+app.post('/api/data', (req, res) => {
+    try {
+        const { entries, completed } = req.body;
+        const dataPath = path.join(__dirname, 'data');
+        
+        if (!fs.existsSync(dataPath)) {
+            fs.mkdirSync(dataPath);
+        }
+        
+        fs.writeFileSync(path.join(dataPath, 'workshopEntries.json'), JSON.stringify(entries, null, 2));
+        fs.writeFileSync(path.join(dataPath, 'completedEntries.json'), JSON.stringify(completed, null, 2));
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error saving data:', error);
+        res.status(500).json({ error: 'Failed to save data' });
+    }
 });
 
-// PUT update vehicle
-app.put('/api/vehicles/:id', (req, res) => {
-  const vehicles = readVehicles();
-  const idx = vehicles.findIndex(v => v.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Not found' });
-  vehicles[idx] = { ...vehicles[idx], ...req.body };
-  writeVehicles(vehicles);
-  res.json(vehicles[idx]);
-});
-
-// DELETE vehicle
-app.delete('/api/vehicles/:id', (req, res) => {
-  let vehicles = readVehicles();
-  const idx = vehicles.findIndex(v => v.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Not found' });
-  const removed = vehicles.splice(idx, 1);
-  writeVehicles(vehicles);
-  res.json(removed[0]);
-});
-
-// Fallback: serve index.html for any other route (for SPA support)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// Serve the main page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+    console.log(`🚗 Workshop Management System running on http://localhost:${PORT}`);
+    console.log(`📱 Access from other devices on your network using your computer's IP address`);
+    console.log(`🌐 For external access, consider deploying to a cloud service`);
 }); 

@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workshop View - Workshop Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ffd700 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
+        }
+
+        .csv-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .csv-btn {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .csv-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        .csv-btn.secondary {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .csv-btn.secondary:hover {
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .toggle-header-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .toggle-header-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.1);
+        }
+
+        .header.hidden {
+            transform: translateY(-100%);
+            opacity: 0;
+            pointer-events: none;
+            margin-bottom: 0;
+            height: 0;
+            padding: 0;
+        }
+
+        .header {
+            transition: all 0.5s ease;
+            margin-bottom: 30px;
+        }
+
+        .workshop-view {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.5s ease;
+        }
+
+        .workshop-view.header-hidden {
+            margin-top: 0;
+            border-radius: 0;
+            min-height: calc(100vh - 40px);
+            border: 3px solid #ff6b35;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            transition: all 0.5s ease;
+        }
+
+        .container.header-hidden {
+            max-width: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: #cbd5e0;
+        }
+
+        .workshop-view {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .card.urgent {
+            border: 2px solid #e53e3e;
+            background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+        }
+
+        .card.onsite {
+            border: 2px solid #48bb78;
+        }
+
+        .card.completed {
+            opacity: 0.7;
+            background: #f7fafc;
+        }
+
+        .urgent-badge {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            background: #e53e3e;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 10;
+        }
+
+        .onsite-badge {
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: #48bb78;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 10;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .stock-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .ro-number {
+            background: #f7fafc;
+            color: #4a5568;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-weight: 500;
+            font-size: 0.8rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn {
+            background: #4299e1;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: #3182ce;
+        }
+
+        .complete-btn {
+            background: #48bb78;
+            color: white;
+        }
+
+        .complete-btn:hover {
+            background: #38a169;
+        }
+
+        .delete-btn {
+            background: #e53e3e;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #c53030;
+        }
+
+        .card-content {
+            display: grid;
+            gap: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #4a5568;
+            min-width: 100px;
+            font-size: 0.9rem;
+        }
+
+        .info-value {
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        .work-required {
+            margin-top: 10px;
+        }
+
+        .work-required ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .work-required li {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .work-required li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .required-date {
+            background: #f7fafc;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            margin-top: 15px;
+        }
+
+        .required-date .info-label {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #4a5568;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                backdrop-filter: blur(0px);
+            }
+            to {
+                opacity: 1;
+                backdrop-filter: blur(10px);
+            }
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            margin: 3% auto;
+            padding: 0;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 94vh;
+            overflow: hidden;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: modalSlideIn 0.4s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px) scale(0.95);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            color: white;
+            padding: 30px 40px 25px;
+            position: relative;
+        }
+
+        .modal-header h2 {
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .close {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+            color: white;
+            font-size: 32px;
+            font-weight: 300;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .modal-body {
+            padding: 40px;
+            overflow-y: auto;
+            max-height: calc(94vh - 120px);
+        }
+
+        .modal-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .modal-form .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .modal-form .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-form .form-group label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .modal-form .form-group input,
+        .modal-form .form-group textarea,
+        .modal-form .form-group select {
+            padding: 14px 18px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .modal-form .form-group input:focus,
+        .modal-form .form-group textarea:focus,
+        .modal-form .form-group select:focus {
+            outline: none;
+            border-color: #ff6b35;
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+
+        .modal-form .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .modal-form .checkbox-group input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            accent-color: #ff6b35;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .modal-btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .modal-btn.primary {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        .modal-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+        }
+
+        .modal-btn.secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+        }
+
+        .modal-btn.secondary:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 1400px) {
+            .cards-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 1100px) {
+            .cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .modal-content {
+                margin: 10% auto;
+                width: 95%;
+                padding: 20px;
+            }
+            
+            .modal-form {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (min-width: 1920px) {
+            .header h1 {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="container">
+        <button class="toggle-header-btn" onclick="workshopManager.toggleHeader()" title="Toggle Header">👁️</button>
+        
+        <div class="header" id="header">
+            <div class="header-content">
+                <h1>📋 Workshop View</h1>
+                <div style="display: flex; gap: 10px;">
+                    <a href="add-vehicle.html" class="nav-btn">➕ Add Vehicle</a>
+                    <a href="index.html" class="nav-btn">🏠 Home</a>
+                </div>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" onclick="workshopManager.switchTab('pending')">Pending</button>
+                <button class="tab-btn" onclick="workshopManager.switchTab('completed')">Completed</button>
+            </div>
+            
+            <div class="csv-controls">
+                <button class="csv-btn secondary" onclick="workshopManager.exportCSV()">
+                    📊 Export CSV
+                </button>
+                <button class="csv-btn" onclick="document.getElementById('csvFileInput').click()">
+                    📁 Import CSV
+                </button>
+                <input type="file" id="csvFileInput" class="file-input" accept=".csv" onchange="workshopManager.importCSV(event)">
+            </div>
+        </div>
+
+        <div class="workshop-view" id="workshopView">
+            <div id="cardsContainer" class="cards-grid">
+                <!-- Cards will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ Edit Vehicle</h2>
+                <span class="close" onclick="workshopManager.closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <div class="modal-form">
+                        <div class="form-group">
+                            <label for="editStockNumber">Stock Number</label>
+                            <input type="text" id="editStockNumber" name="stockNumber" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editRoNumber">RO Number</label>
+                            <input type="text" id="editRoNumber" name="roNumber" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editBrand">Brand</label>
+                            <select id="editBrand" name="brand" required>
+                                <option value="Volvo">Volvo</option>
+                                <option value="Jeep">Jeep</option>
+                                <option value="LDV">LDV</option>
+                                <option value="MG">MG</option>
+                                <option value="Used">Used</option>
+                                <option value="Polestar">Polestar</option>
+                                <option value="Leapmotor">Leapmotor</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editModel">Model</label>
+                            <input type="text" id="editModel" name="model" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editColour">Colour</label>
+                            <input type="text" id="editColour" name="colour" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editCustomerName">Customer Name</label>
+                            <input type="text" id="editCustomerName" name="customerName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editSalesperson">Salesperson</label>
+                            <select id="editSalesperson" name="salesperson" required>
+                                <option value="Jake C.">Jake C.</option>
+                                <option value="Keith G.">Keith G.</option>
+                                <option value="Michael R.">Michael R.</option>
+                                <option value="Jason B.">Jason B.</option>
+                                <option value="Mark K.">Mark K.</option>
+                                <option value="Wendy B.">Wendy B.</option>
+                                <option value="Charles R.">Charles R.</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editRequiredDateTime">Required Date & Time</label>
+                            <input type="datetime-local" id="editRequiredDateTime" name="requiredDateTime" required>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="editOnsite" name="onsite">
+                                <label for="editOnsite">Vehicle is Onsite</label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="editWorkRequired">Work Required</label>
+                            <textarea id="editWorkRequired" name="workRequired" rows="4" required></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="modal-btn secondary" onclick="workshopManager.closeModal()">Cancel</button>
+                        <button type="submit" class="modal-btn primary">💾 Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class WorkshopManager {
+            constructor() {
+                this.entries = [];
+                this.completedEntries = [];
+                this.cardsContainer = document.getElementById('cardsContainer');
+                this.currentTab = 'pending';
+                this.editingEntry = null;
+                
+                this.initialize();
+            }
+
+            async initialize() {
+                await this.loadData();
+                this.renderCards();
+                
+                // Event listeners
+                document.getElementById('editForm').addEventListener('submit', (e) => this.handleEditSubmit(e));
+                
+                // Close modal when clicking outside
+                document.getElementById('editModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'editModal') {
+                        this.closeModal();
+                    }
+                });
+
+                // Auto-refresh data every 30 seconds
+                setInterval(() => this.loadData(), 30000);
+            }
+
+            async loadData() {
+                try {
+                    const response = await fetch('/api/data');
+                    const data = await response.json();
+                    this.entries = data.entries || [];
+                    this.completedEntries = data.completed || [];
+                } catch (error) {
+                    console.error('Error loading data:', error);
+                    // Fallback to localStorage if server is not available
+                    this.entries = JSON.parse(localStorage.getItem('workshopEntries')) || [];
+                    this.completedEntries = JSON.parse(localStorage.getItem('completedEntries')) || [];
+                }
+            }
+
+            switchTab(tab) {
+                this.currentTab = tab;
+                
+                // Update tab buttons
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+                
+                this.renderCards();
+            }
+
+            isUrgent(requiredDateTime) {
+                const now = new Date();
+                const required = new Date(requiredDateTime);
+                const twoDaysFromNow = new Date(now.getTime() + (2 * 24 * 60 * 60 * 1000));
+                return required <= twoDaysFromNow;
+            }
+
+            formatDateTime(dateTimeString) {
+                const date = new Date(dateTimeString);
+                return date.toLocaleString('en-GB', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            formatWorkRequired(workText) {
+                return workText.split('\n').filter(line => line.trim() !== '');
+            }
+
+            openEditModal(entryId) {
+                const entry = this.entries.find(e => e.id === entryId) || this.completedEntries.find(e => e.id === entryId);
+                if (!entry) return;
+                
+                this.editingEntry = entry;
+                
+                // Populate form fields
+                document.getElementById('editStockNumber').value = entry.stockNumber;
+                document.getElementById('editRoNumber').value = entry.roNumber;
+                document.getElementById('editBrand').value = entry.brand;
+                document.getElementById('editModel').value = entry.model;
+                document.getElementById('editColour').value = entry.colour;
+                document.getElementById('editCustomerName').value = entry.customerName;
+                document.getElementById('editSalesperson').value = entry.salesperson;
+                document.getElementById('editRequiredDateTime').value = entry.requiredDateTime;
+                document.getElementById('editOnsite').checked = entry.onsite;
+                document.getElementById('editWorkRequired').value = entry.workRequired;
+                
+                document.getElementById('editModal').style.display = 'block';
+            }
+
+            closeModal() {
+                document.getElementById('editModal').style.display = 'none';
+                this.editingEntry = null;
+            }
+
+            async handleEditSubmit(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(e.target);
+                
+                // Update the entry
+                this.editingEntry.stockNumber = formData.get('stockNumber');
+                this.editingEntry.roNumber = formData.get('roNumber');
+                this.editingEntry.brand = formData.get('brand');
+                this.editingEntry.model = formData.get('model');
+                this.editingEntry.colour = formData.get('colour');
+                this.editingEntry.customerName = formData.get('customerName');
+                this.editingEntry.salesperson = formData.get('salesperson');
+                this.editingEntry.requiredDateTime = formData.get('requiredDateTime');
+                this.editingEntry.onsite = formData.get('onsite') === 'on';
+                this.editingEntry.workRequired = formData.get('workRequired');
+                
+                // Update the entry in the correct array
+                if (this.currentTab === 'pending') {
+                    const index = this.entries.findIndex(e => e.id === this.editingEntry.id);
+                    if (index !== -1) {
+                        this.entries[index] = { ...this.editingEntry };
+                    }
+                } else {
+                    const index = this.completedEntries.findIndex(e => e.id === this.editingEntry.id);
+                    if (index !== -1) {
+                        this.completedEntries[index] = { ...this.editingEntry };
+                    }
+                }
+                
+                await this.saveToServer();
+                this.renderCards();
+                this.closeModal();
+            }
+
+            async markAsComplete(id) {
+                const entry = this.entries.find(e => e.id === id);
+                if (entry) {
+                    entry.completed = true;
+                    entry.completedAt = new Date().toISOString();
+                    
+                    // Move to completed entries
+                    this.completedEntries.push(entry);
+                    this.entries = this.entries.filter(e => e.id !== id);
+                    
+                    await this.saveToServer();
+                    this.renderCards();
+                }
+            }
+
+            async deleteEntry(id) {
+                if (confirm('Are you sure you want to delete this entry?')) {
+                    if (this.currentTab === 'pending') {
+                        this.entries = this.entries.filter(entry => entry.id !== id);
+                    } else {
+                        this.completedEntries = this.completedEntries.filter(entry => entry.id !== id);
+                    }
+                    await this.saveToServer();
+                    this.renderCards();
+                }
+            }
+
+            async saveToServer() {
+                try {
+                    await fetch('/api/data', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            entries: this.entries,
+                            completed: this.completedEntries
+                        })
+                    });
+                } catch (error) {
+                    console.error('Error saving to server:', error);
+                    // Fallback to localStorage
+                    localStorage.setItem('workshopEntries', JSON.stringify(this.entries));
+                    localStorage.setItem('completedEntries', JSON.stringify(this.completedEntries));
+                }
+            }
+
+            exportCSV() {
+                const allEntries = [...this.entries, ...this.completedEntries];
+                
+                if (allEntries.length === 0) {
+                    alert('No data to export');
+                    return;
+                }
+
+                // Define CSV headers
+                const headers = [
+                    'Stock Number',
+                    'RO Number', 
+                    'Brand',
+                    'Model',
+                    'Colour',
+                    'Customer Name',
+                    'Salesperson',
+                    'Work Required',
+                    'Required Date & Time',
+                    'Onsite',
+                    'Completed',
+                    'Created At',
+                    'Completed At'
+                ];
+
+                // Convert data to CSV format
+                const csvContent = [
+                    headers.join(','),
+                    ...allEntries.map(entry => [
+                        `"${entry.stockNumber}"`,
+                        `"${entry.roNumber}"`,
+                        `"${entry.brand}"`,
+                        `"${entry.model}"`,
+                        `"${entry.colour}"`,
+                        `"${entry.customerName}"`,
+                        `"${entry.salesperson}"`,
+                        `"${entry.workRequired.replace(/"/g, '""')}"`,
+                        `"${entry.requiredDateTime}"`,
+                        `"${entry.onsite ? 'Yes' : 'No'}"`,
+                        `"${entry.completed ? 'Yes' : 'No'}"`,
+                        `"${entry.createdAt}"`,
+                        `"${entry.completedAt || ''}"`
+                    ].join(','))
+                ].join('\n');
+
+                // Create and download file
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', `workshop_data_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            async importCSV(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const csv = e.target.result;
+                        const lines = csv.split('\n');
+                        const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+                        
+                        const newEntries = [];
+                        
+                        for (let i = 1; i < lines.length; i++) {
+                            if (lines[i].trim() === '') continue;
+                            
+                            const values = this.parseCSVLine(lines[i]);
+                            if (values.length < headers.length) continue;
+                            
+                            const entry = {
+                                id: Date.now().toString() + i,
+                                stockNumber: values[0]?.replace(/"/g, '') || '',
+                                roNumber: values[1]?.replace(/"/g, '') || '',
+                                brand: values[2]?.replace(/"/g, '') || '',
+                                model: values[3]?.replace(/"/g, '') || '',
+                                colour: values[4]?.replace(/"/g, '') || '',
+                                customerName: values[5]?.replace(/"/g, '') || '',
+                                salesperson: values[6]?.replace(/"/g, '') || '',
+                                workRequired: values[7]?.replace(/"/g, '') || '',
+                                requiredDateTime: values[8]?.replace(/"/g, '') || '',
+                                onsite: values[9]?.replace(/"/g, '').toLowerCase() === 'yes',
+                                completed: values[10]?.replace(/"/g, '').toLowerCase() === 'yes',
+                                createdAt: values[11]?.replace(/"/g, '') || new Date().toISOString(),
+                                completedAt: values[12]?.replace(/"/g, '') || null
+                            };
+                            
+                            if (entry.completed) {
+                                this.completedEntries.push(entry);
+                            } else {
+                                this.entries.push(entry);
+                            }
+                        }
+                        
+                        await this.saveToServer();
+                        this.renderCards();
+                        
+                        alert(`Successfully imported ${newEntries.length} entries`);
+                        
+                    } catch (error) {
+                        alert('Error importing CSV file. Please check the format.');
+                        console.error('CSV Import Error:', error);
+                    }
+                };
+                
+                reader.readAsText(file);
+                event.target.value = ''; // Reset file input
+            }
+
+            parseCSVLine(line) {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current);
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                
+                result.push(current);
+                return result;
+            }
+
+            toggleHeader() {
+                const header = document.getElementById('header');
+                const workshopView = document.getElementById('workshopView');
+                const container = document.getElementById('container');
+                const toggleBtn = document.querySelector('.toggle-header-btn');
+                
+                if (header.classList.contains('hidden')) {
+                    header.classList.remove('hidden');
+                    workshopView.classList.remove('header-hidden');
+                    container.classList.remove('header-hidden');
+                    toggleBtn.textContent = '👁️';
+                    toggleBtn.title = 'Hide Header';
+                } else {
+                    header.classList.add('hidden');
+                    workshopView.classList.add('header-hidden');
+                    container.classList.add('header-hidden');
+                    toggleBtn.textContent = '👁️‍🗨️';
+                    toggleBtn.title = 'Show Header';
+                }
+            }
+
+            renderCards() {
+                const entries = this.currentTab === 'pending' ? this.entries : this.completedEntries;
+                
+                if (entries.length === 0) {
+                    this.cardsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <h3>No ${this.currentTab} vehicles</h3>
+                            <p>${this.currentTab === 'pending' ? 'Add a vehicle using the form above to get started' : 'No completed vehicles yet'}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Sort entries by required date/time
+                const sortedEntries = [...entries].sort((a, b) => 
+                    new Date(a.requiredDateTime) - new Date(b.requiredDateTime)
+                );
+
+                this.cardsContainer.innerHTML = sortedEntries.map(entry => {
+                    const isUrgent = this.isUrgent(entry.requiredDateTime);
+                    const urgentClass = isUrgent && !entry.completed ? 'urgent' : '';
+                    const onsiteClass = entry.onsite ? 'onsite' : '';
+                    const completedClass = entry.completed ? 'completed' : '';
+                    
+                    return `
+                        <div class="card ${urgentClass} ${onsiteClass} ${completedClass}">
+                            ${isUrgent && !entry.completed ? '<div class="urgent-badge">URGENT</div>' : ''}
+                            ${entry.onsite ? '<div class="onsite-badge">ONSITE</div>' : ''}
+                            
+                            <div class="card-header">
+                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                    <div class="stock-number">${entry.stockNumber}</div>
+                                    <div class="ro-number">RO: ${entry.roNumber}</div>
+                                </div>
+                                
+                                ${!entry.completed ? `
+                                    <div class="action-buttons">
+                                        <button class="btn edit-btn" onclick="workshopManager.openEditModal('${entry.id}')" title="Edit">✏️</button>
+                                        <button class="btn complete-btn" onclick="workshopManager.markAsComplete('${entry.id}')" title="Mark Complete">✅</button>
+                                        <button class="btn delete-btn" onclick="workshopManager.deleteEntry('${entry.id}')" title="Delete">🗑️</button>
+                                    </div>
+                                ` : `
+                                    <div class="action-buttons">
+                                        <button class="btn delete-btn" onclick="workshopManager.deleteEntry('${entry.id}')" title="Delete">🗑️</button>
+                                    </div>
+                                `}
+                            </div>
+                            
+                            <div class="card-content">
+                                <div class="info-row">
+                                    <span class="info-label">Vehicle:</span>
+                                    <span class="info-value">${entry.brand} ${entry.model}</span>
+                                </div>
+                                
+                                <div class="info-row">
+                                    <span class="info-label">Colour:</span>
+                                    <span class="info-value">${entry.colour}</span>
+                                </div>
+                                
+                                <div class="info-row">
+                                    <span class="info-label">Customer:</span>
+                                    <span class="info-value">${entry.customerName}</span>
+                                </div>
+                                
+                                <div class="info-row">
+                                    <span class="info-label">Salesperson:</span>
+                                    <span class="info-value">${entry.salesperson}</span>
+                                </div>
+                                
+                                <div class="work-required">
+                                    <div class="info-label">Work Required:</div>
+                                    <ul>
+                                        ${this.formatWorkRequired(entry.workRequired).map(item => 
+                                            `<li>${item}</li>`
+                                        ).join('')}
+                                    </ul>
+                                </div>
+                                
+                                <div class="required-date">
+                                    <span class="info-label">Required By:</span>
+                                    <div class="info-value">${this.formatDateTime(entry.requiredDateTime)}</div>
+                                </div>
+                                
+                                ${entry.completed ? `
+                                    <div class="required-date" style="border-left-color: #48bb78;">
+                                        <span class="info-label" style="color: #48bb78;">Completed:</span>
+                                        <div class="info-value">${this.formatDateTime(entry.completedAt)}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Initialize the workshop manager
+        const workshopManager = new WorkshopManager();
+    </script>
+</body>
+</html> 
