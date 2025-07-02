@@ -335,4 +335,34 @@ body {
 .tiles-grid::-webkit-scrollbar-thumb, .admin-main::-webkit-scrollbar-thumb, .sidebar::-webkit-scrollbar-thumb, #admin-vehicles-list::-webkit-scrollbar-thumb {
   background: #0074d9;
   border-radius: 8px;
+}
+
+/* Floating Admin Button (Workshop Display) */
+.floating-admin-btn {
+  position: fixed;
+  top: 2.2rem;
+  right: 2.2rem;
+  z-index: 100;
+  background: rgba(30, 34, 44, 0.85);
+  color: #ffdc00;
+  font-size: 2.1rem;
+  font-weight: 800;
+  padding: 0.7em 1.5em;
+  border-radius: 2em;
+  box-shadow: 0 4px 24px #0007, 0 1.5px 0 #fff1 inset;
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  border: 2.5px solid #ffdc00;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s;
+  backdrop-filter: blur(8px) saturate(1.1);
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+}
+.floating-admin-btn:hover, .floating-admin-btn:focus {
+  background: #ffdc00;
+  color: #232a34;
+  border-color: #0074d9;
+  box-shadow: 0 8px 32px #0074d955;
+  outline: none;
 } 
