@@ -136,9 +136,11 @@ if (window.location.pathname.endsWith('admin.html')) {
   const vehicleForm = document.getElementById('vehicle-form');
   const adminList = document.getElementById('admin-vehicles-list');
   const cancelEditBtn = document.getElementById('cancel-edit');
+  const formStatus = document.getElementById('form-status');
 
   let vehicles = [];
   let editingId = null;
+  let inlineEditValues = {};
 
   // Simple login using localStorage
   function isLoggedIn() {
@@ -183,34 +185,113 @@ if (window.location.pathname.endsWith('admin.html')) {
     cancelEditBtn.style.display = 'none';
   }
 
-  // Render admin vehicle list
+  // Toast notification
+  function showToast(msg, type = 'success') {
+    let toast = document.createElement('div');
+    toast.textContent = msg;
+    toast.className = 'form-status ' + type;
+    toast.style.position = 'fixed';
+    toast.style.top = '2.5rem';
+    toast.style.right = '2.5rem';
+    toast.style.zIndex = 9999;
+    toast.style.background = '#232a34cc';
+    toast.style.padding = '1em 2em';
+    toast.style.borderRadius = '1em';
+    toast.style.boxShadow = '0 4px 24px #0007';
+    toast.style.fontSize = '1.2rem';
+    toast.style.fontWeight = '700';
+    toast.style.color = type === 'error' ? '#ff4136' : '#2ecc40';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 1800);
+  }
+
+  // Render admin vehicle list with inline editing
   function renderAdminList() {
-    adminList.innerHTML = vehicles.map(vehicle =>
-      `<div class="admin-vehicle-item${vehicle.complete ? ' complete' : ''}" data-id="${vehicle.id}">
-        <b>${vehicle.stockNumber} - ${vehicle.brand} ${vehicle.model}</b>
-        <span>Colour: ${vehicle.colour}</span>
-        <span>Customer: ${vehicle.customerName}</span>
-        <span>Sales: ${vehicle.salespersonName}</span>
-        <span>Due: ${formatDateTimeAU(vehicle.dueDateTime)}</span>
-        <span class="tags">${renderTags(vehicle.workRequired || [])}</span>
-        <div class="admin-actions">
-          <button class="edit-btn">✏️ Edit</button>
-          <button class="delete-btn">🗑️ Delete</button>
-          <button class="complete-btn" ${vehicle.complete ? 'disabled' : ''}>✅ Complete</button>
-        </div>
-      </div>`
-    ).join('');
+    adminList.innerHTML = vehicles.map(vehicle => {
+      if (editingId === vehicle.id) {
+        // Inline edit form
+        return `<form class="admin-vehicle-item editing" data-id="${vehicle.id}">
+          <input class="inline-edit-input" name="stockNumber" value="${inlineEditValues.stockNumber ?? vehicle.stockNumber}" required />
+          <input class="inline-edit-input" name="brand" value="${inlineEditValues.brand ?? vehicle.brand}" required />
+          <input class="inline-edit-input" name="model" value="${inlineEditValues.model ?? vehicle.model}" required />
+          <input class="inline-edit-input" name="colour" value="${inlineEditValues.colour ?? vehicle.colour}" required />
+          <input class="inline-edit-input" name="customerName" value="${inlineEditValues.customerName ?? vehicle.customerName}" required />
+          <input class="inline-edit-input" name="salespersonName" value="${inlineEditValues.salespersonName ?? vehicle.salespersonName}" required />
+          <input class="inline-edit-input" name="dueDateTime" type="datetime-local" value="${vehicle.dueDateTime ? new Date(vehicle.dueDateTime).toISOString().slice(0,16) : ''}" required />
+          <input class="inline-edit-input" name="workRequired" value="${(vehicle.workRequired||[]).join(', ')}" required />
+          <div class="inline-edit-actions">
+            <button type="submit">Save</button>
+            <button type="button" class="cancel-btn">Cancel</button>
+          </div>
+        </form>`;
+      } else {
+        return `<div class="admin-vehicle-item${vehicle.complete ? ' complete' : ''}" data-id="${vehicle.id}">
+          <b>${vehicle.stockNumber} - ${vehicle.brand} ${vehicle.model}</b>
+          <span>Colour: ${vehicle.colour}</span>
+          <span>Customer: ${vehicle.customerName}</span>
+          <span>Sales: ${vehicle.salespersonName}</span>
+          <span>Due: ${formatDateTimeAU(vehicle.dueDateTime)}</span>
+          <span class="tags">${renderTags(vehicle.workRequired || [])}</span>
+          <div class="admin-actions">
+            <button class="edit-btn">✏️ Edit</button>
+            <button class="delete-btn">🗑️ Delete</button>
+            <button class="complete-btn" ${vehicle.complete ? 'disabled' : ''}>✅ Complete</button>
+          </div>
+        </div>`;
+      }
+    }).join('');
     attachAdminEvents();
   }
 
-  // Attach admin list events
+  // Attach admin list events (inline editing)
   function attachAdminEvents() {
+    // Inline edit form events
+    adminList.querySelectorAll('form.admin-vehicle-item.editing').forEach(form => {
+      // Save
+      form.onsubmit = async e => {
+        e.preventDefault();
+        const id = form.dataset.id;
+        const data = Object.fromEntries(new FormData(form));
+        data.workRequired = parseWorkRequired(data.workRequired);
+        try {
+          const res = await fetch(`${API_URL}/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          if (!res.ok) throw new Error('Failed to save.');
+          showToast('Saved!');
+          editingId = null;
+          inlineEditValues = {};
+          fetchVehicles();
+        } catch (err) {
+          showToast(err.message || 'Error saving.', 'error');
+        }
+      };
+      // Cancel
+      form.querySelector('.cancel-btn').onclick = e => {
+        editingId = null;
+        inlineEditValues = {};
+        renderAdminList();
+      };
+      // Track input changes for seamless editing
+      form.querySelectorAll('.inline-edit-input').forEach(input => {
+        input.oninput = e => {
+          inlineEditValues[input.name] = input.value;
+        };
+      });
+    });
+    // Normal edit button
     adminList.querySelectorAll('.edit-btn').forEach(btn => {
       btn.onclick = e => {
         const id = btn.closest('.admin-vehicle-item').dataset.id;
-        startEdit(id);
+        editingId = id;
+        const v = vehicles.find(v => v.id === id);
+        inlineEditValues = { ...v };
+        renderAdminList();
       };
     });
+    // Delete
     adminList.querySelectorAll('.delete-btn').forEach(btn => {
       btn.onclick = async e => {
         const id = btn.closest('.admin-vehicle-item').dataset.id;
@@ -218,6 +299,7 @@ if (window.location.pathname.endsWith('admin.html')) {
         fetchVehicles();
       };
     });
+    // Complete
     adminList.querySelectorAll('.complete-btn:not([disabled])').forEach(btn => {
       btn.onclick = async e => {
         const id = btn.closest('.admin-vehicle-item').dataset.id;
@@ -230,62 +312,6 @@ if (window.location.pathname.endsWith('admin.html')) {
       };
     });
   }
-
-  // Start editing a vehicle
-  function startEdit(id) {
-    const v = vehicles.find(v => v.id === id);
-    if (!v) return;
-    editingId = id;
-    document.getElementById('vehicle-id').value = v.id;
-    document.getElementById('stock-number').value = v.stockNumber;
-    document.getElementById('brand').value = v.brand;
-    document.getElementById('model').value = v.model;
-    document.getElementById('colour').value = v.colour;
-    document.getElementById('customer-name').value = v.customerName;
-    document.getElementById('salesperson-name').value = v.salespersonName;
-    document.getElementById('due-datetime').value = v.dueDateTime ? new Date(v.dueDateTime).toISOString().slice(0,16) : '';
-    document.getElementById('work-required').value = (v.workRequired||[]).join(', ');
-    cancelEditBtn.style.display = '';
-  }
-
-  // Cancel edit
-  cancelEditBtn.onclick = e => {
-    vehicleForm.reset();
-    editingId = null;
-    cancelEditBtn.style.display = 'none';
-  };
-
-  // Handle add/edit vehicle form
-  vehicleForm.onsubmit = async e => {
-    e.preventDefault();
-    const id = document.getElementById('vehicle-id').value;
-    const data = {
-      stockNumber: document.getElementById('stock-number').value,
-      brand: document.getElementById('brand').value,
-      model: document.getElementById('model').value,
-      colour: document.getElementById('colour').value,
-      customerName: document.getElementById('customer-name').value,
-      salespersonName: document.getElementById('salesperson-name').value,
-      dueDateTime: document.getElementById('due-datetime').value,
-      workRequired: parseWorkRequired(document.getElementById('work-required').value)
-    };
-    if (id) {
-      // Edit
-      await fetch(`${API_URL}/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-    } else {
-      // Add
-      await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-    }
-    fetchVehicles();
-  };
 
   // Poll for updates every 5 seconds
   setInterval(fetchVehicles, 5000);

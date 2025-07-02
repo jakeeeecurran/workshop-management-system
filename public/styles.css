@@ -365,4 +365,68 @@ body {
   border-color: #0074d9;
   box-shadow: 0 8px 32px #0074d955;
   outline: none;
+}
+
+/* Form status message styles */
+.form-status {
+  margin-top: 0.7rem;
+  font-size: 1.15rem;
+  min-height: 1.5em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: color 0.2s;
+}
+.form-status.success {
+  color: #2ecc40;
+}
+.form-status.error {
+  color: #ff4136;
+}
+.form-status.saving {
+  color: #0074d9;
+  animation: pulse 1s infinite alternate;
+}
+@keyframes pulse {
+  from { opacity: 1; }
+  to { opacity: 0.5; }
+}
+
+/* Inline editing styles for admin list */
+.admin-vehicle-item.editing {
+  background: rgba(0, 116, 217, 0.10);
+  box-shadow: 0 0 0 3px #0074d9aa, 0 6px 32px #0005;
+  border-left: 8px solid #ffdc00;
+}
+.inline-edit-input {
+  font-size: 1.1rem;
+  padding: 0.5em 0.8em;
+  border-radius: 0.5em;
+  border: 2px solid #0074d9;
+  background: #232a34;
+  color: #fff;
+  margin-right: 0.5em;
+  margin-bottom: 0.3em;
+  min-width: 120px;
+}
+.inline-edit-actions {
+  display: flex;
+  gap: 0.7em;
+}
+.inline-edit-actions button {
+  font-size: 1rem;
+  padding: 0.4em 1em;
+  border-radius: 0.5em;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(90deg, #0074d9 0%, #00c3ff 100%);
+  color: #fff;
+  transition: background 0.2s, color 0.2s;
+}
+.inline-edit-actions button.cancel-btn {
+  background: #888;
+  color: #222;
+}
+.inline-edit-actions button:active {
+  filter: brightness(0.93);
 } 
