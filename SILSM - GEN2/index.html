@@ -1,0 +1,3152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunco Motors Salesman Generator by Jikjak</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#FF6B35',
+                        'accent': '#FFD23F',
+                        'red': '#DC2626'
+                    }
+                }
+            }
+        }
+        // Help button function
+        function showTutorial() {
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.id = 'helpModal';
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-8 max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Welcome to Sunco Motors Silent Salesman Generator!</h2>
+                        <button onclick="closeTutorial()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-700 mb-3">This tool helps you create professional vehicle flyers.</h3>
+                            
+                            <div class="bg-blue-50 p-4 rounded-lg mb-4">
+                                <h4 class="font-semibold text-blue-800 mb-2">Key Features:</h4>
+                                <ul class="text-blue-700 space-y-1">
+                                    <li>• Select your brand/dealership</li>
+                                    <li>• Add vehicle details and images</li>
+                                    <li>• Choose from 10+ badge options</li>
+                                    <li>• Customize colors and styling</li>
+                                    <li>• Export high-quality A4 PDFs</li>
+                                    <li>• Real-time preview updates</li>
+                                    <li>• Professional A4 formatting</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center pt-4">
+                            <button onclick="closeTutorial()" 
+                                    class="bg-primary text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity">
+                                Got it!
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeTutorial();
+                }
+            });
+        }
+        
+        function closeTutorial() {
+            const modal = document.getElementById('helpModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            html, body { 
+                width: 794px; 
+                height: 1123px; 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                overflow: hidden !important;
+            }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .a4-flyer {
+                width: 794px !important;
+                height: 1123px !important;
+                margin: 0 auto !important;
+                background: #fff !important;
+                padding: 32px !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                page-break-after: always;
+                overflow: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: flex-start !important;
+            }
+            /* Ensure badge displays in print */
+            #limitedStockBadge {
+                display: block !important;
+                position: absolute !important;
+                top: -12px !important;
+                left: -12px !important;
+                transform: rotate(-12deg) !important;
+                z-index: 10 !important;
+            }
+            /* Ensure all colors are preserved */
+            .text-primary { color: var(--primary-color, #FF6B35) !important; }
+            .bg-primary { background-color: var(--primary-color, #FF6B35) !important; }
+            .border-accent { border-color: var(--accent-color, #FFD23F) !important; }
+            .bg-accent { background-color: var(--accent-color, #FFD23F) !important; }
+            [class*="bg-accent/30"] { background-color: rgba(255, 210, 63, 0.3) !important; }
+            [class*="bg-accent/20"] { background-color: rgba(255, 210, 63, 0.2) !important; }
+        }
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        .print-only { display: none; }
+        .a4-flyer {
+            width: 794px;
+            height: 1123px;
+            background: #fff;
+            padding: 32px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            box-shadow: 0 4px 32px 0 rgba(0,0,0,0.10);
+            border-radius: 18px;
+            overflow: hidden;
+        }
+        .color-picker {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .color-picker::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        .color-picker::-webkit-color-swatch {
+            border: none;
+            border-radius: 8px;
+        }
+        .vehicle-images-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+            align-items: start;
+        }
+        .side-images-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .image-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        /* Animated title styles */
+        .animated-title {
+            background: linear-gradient(45deg, #FF6B35, #FFD23F, #DC2626, #374151, #000000, #003057, #059669);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: colorShift 3s ease-in-out infinite, glow 2s ease-in-out infinite alternate;
+            text-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+        
+        @keyframes colorShift {
+            0% { background-position: 0% 50%; }
+            25% { background-position: 25% 50%; }
+            50% { background-position: 50% 50%; }
+            75% { background-position: 75% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes glow {
+            from { 
+                text-shadow: 0 0 20px rgba(255, 107, 53, 0.5),
+                            0 0 30px rgba(255, 210, 63, 0.3),
+                            0 0 40px rgba(220, 38, 38, 0.2);
+            }
+            to { 
+                text-shadow: 0 0 30px rgba(255, 107, 53, 0.8),
+                            0 0 40px rgba(255, 210, 63, 0.5),
+                            0 0 50px rgba(220, 38, 38, 0.3);
+            }
+        }
+        
+        .animated-title:hover {
+            animation-duration: 1s;
+            transform: scale(1.05);
+            transition: transform 0.3s ease;
+        }
+
+        .scraped-data-preview {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .data-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .data-section h4 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .draggable-item {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 8px 12px;
+            margin: 4px;
+            border-radius: 6px;
+            cursor: grab;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .draggable-item:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .draggable-item:active {
+            cursor: grabbing;
+        }
+
+        .draggable-image {
+            display: inline-block;
+            margin: 4px;
+            cursor: grab;
+            border-radius: 6px;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .draggable-image:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .draggable-image img {
+            width: 80px;
+            height: 60px;
+            object-fit: cover;
+        }
+
+        .form-field {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 5px 0;
+            min-height: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .form-field.drag-over {
+            border-color: #007bff;
+            background: #f8f9ff;
+        }
+
+        .metadata-info {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .metadata-info span {
+            margin-right: 15px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-6 no-print">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2 animated-title">Sunco Motors Silent Salesman Generator by Jikjak</h1>
+            <p class="text-gray-600">Professional A4 flyers for Sunco Motors dealerships</p>
+        </div>
+
+        <!-- Theme Customizer -->
+        <div class="bg-white p-4 rounded-lg shadow-md mb-6 no-print">
+            <h3 class="text-lg font-semibold mb-3">Theme Colors</h3>
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">Primary:</label>
+                    <input type="color" id="primaryColor" class="color-picker" value="#FF6B35">
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium">Accent:</label>
+                    <input type="color" id="accentColor" class="color-picker" value="#FFD23F">
+                </div>
+                <button onclick="resetColors()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
+                    Reset Colors
+            </button>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end gap-4 mb-6 no-print">
+            <div class="relative">
+                <button onclick="toggleBadgeDropdown()" class="bg-orange-500 text-white py-2 px-6 rounded-md font-semibold shadow hover:opacity-90 transition-colors">
+                    🏷️ Badge Options
+                </button>
+                <div id="badgeDropdown" class="absolute right-0 mt-2 w-64 bg-white border border-gray-300 rounded-lg shadow-lg z-50 hidden">
+                    <div class="p-2">
+                        <button onclick="setBadge('LAST ONE')" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm">LAST ONE</button>
+                        <button onclick="setBadge('ABN PRICE')" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm">ABN PRICE</button>
+                        <button onclick="setBadge('SALE OFFER')" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm">SALE OFFER</button>
+                        <button onclick="setBadge('ONLY ONE REMAINING!')" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm">ONLY ONE REMAINING!</button>
+                        <button onclick="setBadge('LIMITED COLOURS')" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm">LIMITED COLOURS AVAILABLE</button>
+                        <button onclick="setBadge('RUNOUT MODEL')" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm">RUNOUT MODEL</button>
+                        <button onclick="setBadge('DEMO PRICE')" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm">DEMO PRICE</button>
+                        <button onclick="setBadge('LIMITED AVAILABILITY')" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm">LIMITED AVAILABILITY</button>
+                        <button onclick="setBadge('THIS MONTH ONLY')" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm">THIS MONTH ONLY</button>
+                        <button onclick="setBadge('EOFY SALE')" class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm">EOFY SALE</button>
+                        <hr class="my-2">
+                        <button onclick="removeBadge()" class="w-full text-left px-3 py-2 hover:bg-red-100 rounded text-sm text-red-600">Remove Badge</button>
+                    </div>
+                </div>
+            </div>
+            <button onclick="toggleModernTheme()" class="bg-gray-600 text-white py-2 px-6 rounded-md font-semibold shadow hover:opacity-90 transition-colors">
+                🎨 Modern Sharp
+            </button>
+            <button onclick="downloadPDF()" class="bg-primary text-white py-2 px-6 rounded-md font-semibold shadow hover:opacity-90 transition-colors">
+                📄 Download PDF
+            </button>
+        </div>
+
+        <!-- Main Layout: Form (left) + Preview (right) -->
+        <div class="flex flex-col lg:flex-row gap-8 items-start w-full">
+            <!-- Form (no-print) -->
+            <div id="manualFormSection" class="w-full lg:w-[400px] bg-white p-6 rounded-xl shadow-lg no-print">
+                <form id="flyerForm" class="space-y-4">
+                    <!-- Brand/Dealer Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Brand/Dealer</label>
+                        <select id="brandLogo" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="">Select a dealer...</option>
+                            <option value="Sunshine Coast MG" selected>Sunshine Coast MG</option>
+                            <option value="Sunshine Coast LDV">Sunshine Coast LDV</option>
+                            <option value="Jeep Maroochydore">Jeep Maroochydore</option>
+                            <option value="Sunco Used">Sunco Used</option>
+                            <option value="Volvo Cars Sunshine Coast">Volvo Cars Sunshine Coast</option>
+                            <option value="Polestar Sunshine Coast">Polestar Sunshine Coast</option>
+                            <option value="Leapmotor Sunshine Coast">Leapmotor Sunshine Coast</option>
+                            <option value="IM by MG">IM by MG</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Select your dealership (auto-updates colors and models)</p>
+                    </div>
+
+                    <!-- Web URL Auto-Fill -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Auto-Fill from Website</label>
+                        <div class="flex gap-2">
+                            <input type="url" id="websiteUrl" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" placeholder="https://suncomotors.com.au/u51593-942880-mitsubishi-mirage-2014.html">
+                            <button type="button" onclick="scrapeWebsite()" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors font-medium">
+                                🔍 Auto-Fill
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Enter a car listing URL to automatically extract vehicle details</p>
+                        <p class="text-xs text-gray-400 mt-1">Optimized for Sunco Motors website! Also works with Carsales, CarGuide, Gumtree, Facebook Marketplace, and other car listing sites</p>
+                        <div id="scrapingStatus" class="hidden mt-2 p-2 rounded-md text-sm"></div>
+                    </div>
+
+                    <!-- Model Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                        <select id="modelSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="">Select a model...</option>
+                            <option value="MG3 Core">MG3 Core</option>
+                            <option value="MG3 Excite">MG3 Excite</option>
+                            <option value="MG3 Essence Hybrid+">MG3 Essence Hybrid+</option>
+                            <option value="ZS Excite">ZS Excite</option>
+                            <option value="ZS Essence">ZS Essence</option>
+                            <option value="ZS Essence Turbo">ZS Essence Turbo</option>
+                            <option value="ZS Hybrid+ Essence">ZS Hybrid+ Essence</option>
+                            <option value="ZS EV Excite">ZS EV Excite</option>
+                            <option value="ZS EV Essence">ZS EV Essence</option>
+                            <option value="HS Vibe">HS Vibe</option>
+                            <option value="HS Excite">HS Excite</option>
+                            <option value="HS Essence">HS Essence</option>
+                            <option value="HS Plus EV Excite">HS Plus EV Excite</option>
+                            <option value="HS Plus EV Essence">HS Plus EV Essence</option>
+                        </select>
+                    </div>
+
+                    <!-- Manual Model Entry -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Custom Model (overrides dropdown)</label>
+                        <input type="text" id="customModel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g., MG4 Long Range">
+                    </div>
+
+                    <!-- Color Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Color</label>
+                        <input type="text" id="customColor" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g., Sloane Silver, Pebble Black, Dover White">
+                    </div>
+
+                    <!-- Headline Override -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Headline Override</label>
+                        <input type="text" id="headlineOverride" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" placeholder="ZS Hybrid+ Essence in Sloane Silver — RRP $33,990 | Sale $31,490">
+                    </div>
+
+                    <!-- Vehicle Image Upload -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Vehicle Images</label>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Image 1</label>
+                                <input type="file" id="vehicleImage" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Image 2</label>
+                                <input type="file" id="vehicleImage2" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Upload high-quality images of the vehicle</p>
+                    </div>
+
+                    <!-- Key Features -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Key Features</label>
+                        <textarea id="keyFeatures" rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">• Apple CarPlay & Android Auto
+• 360° Camera
+• Rear Parking Sensors
+• Adaptive Cruise Control
+• LED Headlights
+• Auto Emergency Braking
+• 10.1" Touchscreen</textarea>
+                    </div>
+
+                    <!-- Warranty -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Warranty</label>
+                        <input type="text" id="warranty" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" value="10-Year Warranty / 250,000 km Coverage" placeholder="e.g., 7-Year Warranty / 200,000 km Coverage">
+                        <p class="text-xs text-gray-500 mt-1">Warranty details (auto-updates based on brand selection)</p>
+                    </div>
+
+                    <!-- Pricing -->
+                    <div class="grid grid-cols-1 gap-4">
+                    <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Sale Price</label>
+                            <input type="text" id="salePrice" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary font-bold text-red" value="$31,490" placeholder="$31,490">
+                    </div>
+                    </div>
+
+                    <!-- Loyalty/Fleet Program Override -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Loyalty/Fleet Program Override</label>
+                        <textarea id="loyaltyOverride" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Custom loyalty or fleet program message..."></textarea>
+                        <p class="text-xs text-gray-500 mt-1">If filled, this will override the default loyalty/fleet program message.</p>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Scraped Data Preview (hidden by default) -->
+            <div id="scrapedDataSection" class="w-full lg:flex-1 bg-white p-6 rounded-xl shadow-lg no-print hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-primary">📋 Scraped Data - Drag & Drop to Form Fields</h2>
+                    <button onclick="toggleFormView()" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors">
+                        📝 Back to Form
+                    </button>
+                </div>
+                
+                <div class="metadata-info" id="metadataInfo"></div>
+                
+                <div class="data-section">
+                    <h4>📸 Images (<span id="imageCount">0</span>)</h4>
+                    <div id="imageGallery"></div>
+                </div>
+                
+                <div class="data-section">
+                    <h4>🚗 Title</h4>
+                    <div id="titleSection"></div>
+                </div>
+                
+                <div class="data-section">
+                    <h4>✨ Features (<span id="featureCount">0</span>)</h4>
+                    <div id="featuresSection"></div>
+                </div>
+                
+                <div class="data-section">
+                    <h4>⚙️ Specifications (<span id="specCount">0</span>)</h4>
+                    <div id="specsSection"></div>
+                </div>
+                
+                <div class="data-section">
+                    <h4>💰 Pricing (<span id="pricingCount">0</span>)</h4>
+                    <div id="pricingSection"></div>
+                </div>
+                
+                <div class="data-section">
+                    <h4>📞 Contact Info (<span id="contactCount">0</span>)</h4>
+                    <div id="contactSection"></div>
+                </div>
+                
+                <div class="data-section">
+                    <h4>📝 Description</h4>
+                    <div id="descriptionSection"></div>
+                </div>
+                
+                <div class="data-section">
+                    <h4>📄 All Text Content (<span id="textCount">0</span>)</h4>
+                    <div id="allTextSection"></div>
+                </div>
+            </div>
+
+            <!-- Live Preview (A4 Flyer) -->
+            <div class="flex-1 flex justify-center">
+                <div class="a4-flyer" id="flyerContent">
+                    <!-- Header with Logo -->
+                    <div class="w-full flex justify-center items-center pt-4 pb-10 border-b-2 border-gray-200">
+                        <div id="previewBrandLogo" class="text-4xl font-black text-primary text-center">
+                            Brand Logo
+                        </div>
+                    </div>
+
+                    <!-- Main Content -->
+                    <div class="flex-1 w-full flex flex-col items-center justify-start px-8 py-6">
+                        <!-- Vehicle Title -->
+                        <div class="text-center mb-6">
+                            <div class="text-4xl font-extrabold text-primary leading-tight" id="previewHeadline">ZS Hybrid+ Essence in Sloane Silver</div>
+                        </div>
+
+                        <!-- Pricing and Warranty Section -->
+                        <div class="w-full mb-8">
+                            <div class="grid grid-cols-1 gap-4">
+                                <!-- Pricing Box -->
+                                <div class="bg-accent/30 rounded-xl p-6 text-center relative">
+                                    <div id="limitedStockBadge" class="absolute -top-3 -left-3 bg-accent text-white px-4 py-2 rounded-lg text-base font-bold shadow-lg hidden transform -rotate-12 z-10">
+                                        LAST ONE
+                                    </div>
+                                    <div class="text-5xl font-extrabold text-red mb-2" id="previewSalePrice">$31,490</div>
+                                    <div class="text-xl text-gray-600">Drive Away</div>
+                                </div>
+
+                                <!-- Warranty Badge -->
+                                <div class="bg-primary text-white text-center py-4 px-6 rounded-xl font-bold text-xl" id="previewWarranty">
+                                    10-Year Warranty / 250,000 km Coverage
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vehicle Images -->
+                        <div class="w-full mb-8">
+                            <div class="grid grid-cols-2 gap-6">
+                                <div class="image-container">
+                                    <div class="bg-gray-50 border-4 border-accent rounded-xl shadow-lg p-0 h-52 flex items-center justify-center w-full">
+                                        <img id="previewVehicleImage" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDUwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjI1MCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5Q0EzQUYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlZlaGljbGUgSW1hZ2U8L3RleHQ+Cjwvc3ZnPg==" alt="Vehicle Image" class="object-cover w-full h-full rounded-lg">
+                                    </div>
+                                </div>
+                                <div class="image-container">
+                                    <div class="bg-gray-50 border-4 border-accent rounded-xl shadow-lg p-0 h-52 flex items-center justify-center w-full">
+                                        <img id="previewVehicleImage2" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDUwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjI1MCIgeT0iMTUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5Q0EzQUYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlZlaGljbGUgSW1hZ2UgMjwvdGV4dD4KPC9zdmc+" alt="Vehicle Image 2" class="object-cover w-full h-full rounded-lg">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Key Features -->
+                        <div class="w-full mb-8">
+                            <div class="text-2xl font-bold text-primary mb-4 text-center">Key Features</div>
+                            <div id="previewKeyFeatures" class="bg-accent/20 rounded-xl p-6 border-l-4 border-primary">
+                                <div class="grid grid-cols-2 gap-x-8 gap-y-2">
+                                    <p class="text-base text-gray-700">• Apple CarPlay & Android Auto</p>
+                                    <p class="text-base text-gray-700">• 360° Camera</p>
+                                    <p class="text-base text-gray-700">• Rear Parking Sensors</p>
+                                    <p class="text-base text-gray-700">• Adaptive Cruise Control</p>
+                                    <p class="text-base text-gray-700">• LED Headlights</p>
+                                    <p class="text-base text-gray-700">• Auto Emergency Braking</p>
+                                    <p class="text-base text-gray-700">• 10.1" Touchscreen</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Loyalty/Fleet Program Badge -->
+                        <div class="w-full">
+                            <div class="bg-accent text-white text-center py-4 px-6 rounded-xl font-bold text-xl" id="previewLoyaltyProgram">
+                                Looking for more than one? we can help!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get all form elements
+        const formElements = {
+            brandLogo: document.getElementById('brandLogo'),
+            modelSelect: document.getElementById('modelSelect'),
+            customModel: document.getElementById('customModel'),
+            customColor: document.getElementById('customColor'),
+            headlineOverride: document.getElementById('headlineOverride'),
+            vehicleImage: document.getElementById('vehicleImage'),
+            vehicleImage2: document.getElementById('vehicleImage2'),
+            keyFeatures: document.getElementById('keyFeatures'),
+            warranty: document.getElementById('warranty'),
+            salePrice: document.getElementById('salePrice'),
+            loyaltyOverride: document.getElementById('loyaltyOverride'),
+            websiteUrl: document.getElementById('websiteUrl')
+        };
+
+        // Get all preview elements
+        const previewElements = {
+            brandLogo: document.getElementById('previewBrandLogo'),
+            headline: document.getElementById('previewHeadline'),
+            vehicleImage: document.getElementById('previewVehicleImage'),
+            vehicleImage2: document.getElementById('previewVehicleImage2'),
+            keyFeatures: document.getElementById('previewKeyFeatures'),
+            salePrice: document.getElementById('previewSalePrice'),
+            warranty: document.getElementById('previewWarranty'),
+            loyaltyProgram: document.getElementById('previewLoyaltyProgram')
+        };
+
+        // Theme color elements
+        const primaryColorPicker = document.getElementById('primaryColor');
+        const accentColorPicker = document.getElementById('accentColor');
+
+        // Brand/dealer configurations
+        const dealerConfigs = {
+            'Sunshine Coast MG': {
+                primaryColor: '#DC2626', // Red
+                accentColor: '#000000', // Black
+                warranty: '10-Year Warranty / 250,000 km Coverage',
+                website: 'https://www.sunshinecoastmg.com.au',
+                loyaltyProgram: 'Looking for more than one? we can help!',
+                models: [
+                    'MG3 Core',
+                    'MG3 Excite', 
+                    'MG3 Essence Hybrid+',
+                    'ZS Excite',
+                    'ZS Essence',
+                    'ZS Essence Turbo',
+                    'ZS Hybrid+ Essence',
+                    'ZS EV Excite',
+                    'ZS EV Essence',
+                    'HS Vibe',
+                    'HS Excite',
+                    'HS Essence',
+                    'HS Plus EV Excite',
+                    'HS Plus EV Essence'
+                ]
+            },
+            'Sunshine Coast LDV': {
+                primaryColor: '#374151', // Dark Grey
+                accentColor: '#000000', // Black
+                warranty: '7-Year Warranty / 200,000 km Coverage',
+                website: 'https://www.suncoldv.com.au',
+                loyaltyProgram: 'Looking to upgrade? ask about our fleet program.',
+                models: [
+                    'T60 Max',
+                    'T60 Pro',
+                    'D90',
+                    'D90 Pro',
+                    'MIFA 9',
+                    'MIFA 9 Luxury',
+                    'eT60',
+                    'eT60 Max'
+                ]
+            },
+            'Jeep Maroochydore': {
+                primaryColor: '#000000', // Black
+                accentColor: '#4B5320', // Camo Green
+                warranty: '5-Year Warranty / 100,000 km Coverage',
+                website: 'https://www.suncojeep.com.au',
+                loyaltyProgram: 'Already own a Jeep? Ask about our loyalty program',
+                models: [
+                    'Compass Sport',
+                    'Compass Longitude',
+                    'Compass Trailhawk',
+                    'Cherokee Sport',
+                    'Cherokee Longitude',
+                    'Cherokee Trailhawk',
+                    'Grand Cherokee Laredo',
+                    'Grand Cherokee Limited',
+                    'Grand Cherokee Summit',
+                    'Wrangler Sport',
+                    'Wrangler Sahara',
+                    'Wrangler Rubicon',
+                    'Gladiator Sport',
+                    'Gladiator Overland',
+                    'Gladiator Rubicon'
+                ]
+            },
+            'Sunco Used': {
+                primaryColor: '#FF6B35', // Orange
+                accentColor: '#000000', // Black
+                warranty: 'Used Vehicle Warranty',
+                website: 'https://www.suncomotors.com.au',
+                loyaltyProgram: 'Looking for more than one? we can help!',
+                models: [
+                    'MG3 Core',
+                    'MG3 Excite', 
+                    'MG3 Essence Hybrid+',
+                    'ZS Excite',
+                    'ZS Essence',
+                    'ZS Essence Turbo',
+                    'ZS Hybrid+ Essence',
+                    'ZS EV Excite',
+                    'ZS EV Essence',
+                    'HS Vibe',
+                    'HS Excite',
+                    'HS Essence',
+                    'HS Plus EV Excite',
+                    'HS Plus EV Essence',
+                    'T60 Max',
+                    'T60 Pro',
+                    'D90',
+                    'D90 Pro',
+                    'MIFA 9',
+                    'MIFA 9 Luxury',
+                    'eT60',
+                    'eT60 Max',
+                    'Compass Sport',
+                    'Compass Longitude',
+                    'Compass Trailhawk',
+                    'Cherokee Sport',
+                    'Cherokee Longitude',
+                    'Cherokee Trailhawk',
+                    'Grand Cherokee Laredo',
+                    'Grand Cherokee Limited',
+                    'Grand Cherokee Summit',
+                    'Wrangler Sport',
+                    'Wrangler Sahara',
+                    'Wrangler Rubicon',
+                    'Gladiator Sport',
+                    'Gladiator Overland',
+                    'Gladiator Rubicon'
+                ]
+            },
+            'Volvo Cars Sunshine Coast': {
+                primaryColor: '#003057', // Volvo Blue
+                accentColor: '#374151', // Dark Grey
+                warranty: '5-Year Warranty / Unlimited km Coverage',
+                website: 'https://www.volvocars.com/au',
+                loyaltyProgram: 'Business purchase? about our corporate program today',
+                models: [
+                    'XC40 Recharge',
+                    'XC40 B4',
+                    'XC40 B5',
+                    'XC60 Recharge',
+                    'XC60 B5',
+                    'XC60 B6',
+                    'XC90 Recharge',
+                    'XC90 B5',
+                    'XC90 B6',
+                    'C40 Recharge',
+                    'S60 Recharge',
+                    'S60 B4',
+                    'S60 B5',
+                    'V60 Recharge',
+                    'V60 B4',
+                    'V60 B5',
+                    'V90 Recharge',
+                    'V90 B5',
+                    'V90 B6'
+                ]
+            },
+            'Polestar Sunshine Coast': {
+                primaryColor: '#000000', // Black
+                accentColor: '#374151', // Dark Grey
+                warranty: '5-Year Warranty / Unlimited km Coverage',
+                website: 'https://www.polestar.com/au',
+                loyaltyProgram: 'Book your test drive today!',
+                models: [
+                    'Polestar 2 Standard Range',
+                    'Polestar 2 Long Range',
+                    'Polestar 2 Long Range Dual Motor',
+                    'Polestar 2 Long Range Dual Motor Performance',
+                    'Polestar 3 Long Range Dual Motor',
+                    'Polestar 3 Long Range Dual Motor Performance',
+                    'Polestar 4 Long Range Single Motor',
+                    'Polestar 4 Long Range Dual Motor',
+                    'Polestar 4 Long Range Dual Motor Performance'
+                ]
+            },
+            'Leapmotor Sunshine Coast': {
+                primaryColor: '#000000', // Black
+                accentColor: '#059669', // Green
+                warranty: '8-Year Warranty / 150,000 km Coverage',
+                website: 'https://www.leapmotor.com',
+                loyaltyProgram: 'Book your test drive today',
+                models: [
+                    'C10'
+                ]
+            },
+            'IM by MG': {
+                primaryColor: '#000000', // Black
+                accentColor: '#374151', // Dark Grey
+                warranty: '7-Year Warranty / 200,000 km Coverage',
+                website: 'https://www.im-motors.com',
+                loyaltyProgram: 'Book your test drive today!',
+                models: [
+                    'IM5',
+                    'IM6'
+                ]
+            }
+        };
+
+        // Model-specific features for Australian specifications
+        const modelFeatures = {
+            // MG Models
+            'MG3 Core': [
+                'Apple CarPlay & Android Auto',
+                '8" Touchscreen',
+                'Rear Parking Sensors',
+                'LED Daytime Running Lights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                '6 Airbags'
+            ],
+            'MG3 Excite': [
+                'Apple CarPlay & Android Auto',
+                '10.1" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control'
+            ],
+            'MG3 Essence Hybrid+': [
+                'Apple CarPlay & Android Auto',
+                '10.1" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Hybrid Powertrain',
+                'Wireless Phone Charging'
+            ],
+            'ZS Excite': [
+                'Apple CarPlay & Android Auto',
+                '10.1" Touchscreen',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                '6 Airbags',
+                'Blind Spot Detection'
+            ],
+            'ZS Essence': [
+                'Apple CarPlay & Android Auto',
+                '10.1" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Wireless Phone Charging'
+            ],
+            'ZS Essence Turbo': [
+                'Apple CarPlay & Android Auto',
+                '10.1" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Wireless Phone Charging',
+                'Turbo Engine'
+            ],
+            'ZS Hybrid+ Essence': [
+                'Apple CarPlay & Android Auto',
+                '10.1" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Wireless Phone Charging',
+                'Hybrid Powertrain'
+            ],
+            'ZS EV Excite': [
+                'Apple CarPlay & Android Auto',
+                '10.1" Touchscreen',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Blind Spot Detection',
+                'Electric Powertrain',
+                'DC Fast Charging'
+            ],
+            'ZS EV Essence': [
+                'Apple CarPlay & Android Auto',
+                '10.1" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Wireless Phone Charging',
+                'Electric Powertrain',
+                'DC Fast Charging'
+            ],
+            'HS Vibe': [
+                'Apple CarPlay & Android Auto',
+                '10.1" Touchscreen',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                '6 Airbags',
+                'Blind Spot Detection'
+            ],
+            'HS Excite': [
+                'Apple CarPlay & Android Auto',
+                '10.1" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Wireless Phone Charging'
+            ],
+            'HS Essence': [
+                'Apple CarPlay & Android Auto',
+                '10.1" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof'
+            ],
+            'HS Plus EV Excite': [
+                'Apple CarPlay & Android Auto',
+                '10.1" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Wireless Phone Charging',
+                'Electric Powertrain',
+                'DC Fast Charging'
+            ],
+            'HS Plus EV Essence': [
+                'Apple CarPlay & Android Auto',
+                '10.1" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Wireless Phone Charging',
+                'Electric Powertrain',
+                'DC Fast Charging',
+                'Panoramic Sunroof'
+            ],
+            // LDV Models
+            'T60 Max': [
+                'Apple CarPlay & Android Auto',
+                '10" Touchscreen',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                '6 Airbags',
+                'Towing Capacity 3,500kg',
+                '4WD System'
+            ],
+            'T60 Pro': [
+                'Apple CarPlay & Android Auto',
+                '10" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Towing Capacity 3,500kg',
+                '4WD System',
+                'Leather Interior'
+            ],
+            'D90': [
+                'Apple CarPlay & Android Auto',
+                '12" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                '7 Seats',
+                'Panoramic Sunroof'
+            ],
+            'D90 Pro': [
+                'Apple CarPlay & Android Auto',
+                '12" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                '7 Seats',
+                'Panoramic Sunroof',
+                'Leather Interior',
+                'Wireless Phone Charging'
+            ],
+            'MIFA 9': [
+                'Apple CarPlay & Android Auto',
+                '12" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                '6 Seats',
+                'Electric Powertrain',
+                'DC Fast Charging'
+            ],
+            'MIFA 9 Luxury': [
+                'Apple CarPlay & Android Auto',
+                '12" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                '6 Seats',
+                'Electric Powertrain',
+                'DC Fast Charging',
+                'Leather Interior',
+                'Panoramic Sunroof'
+            ],
+            'eT60': [
+                'Apple CarPlay & Android Auto',
+                '10" Touchscreen',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Electric Powertrain',
+                'DC Fast Charging',
+                'Towing Capacity 1,000kg'
+            ],
+            'eT60 Max': [
+                'Apple CarPlay & Android Auto',
+                '10" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Electric Powertrain',
+                'DC Fast Charging',
+                'Towing Capacity 1,000kg',
+                'Leather Interior'
+            ],
+            // Jeep Models
+            'Compass Sport': [
+                'Apple CarPlay & Android Auto',
+                '8.4" Touchscreen',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                '6 Airbags',
+                '4WD System'
+            ],
+            'Compass Longitude': [
+                'Apple CarPlay & Android Auto',
+                '8.4" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                '4WD System',
+                'Leather Interior'
+            ],
+            'Compass Trailhawk': [
+                'Apple CarPlay & Android Auto',
+                '8.4" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                '4WD System',
+                'Off-road Package',
+                'Selec-Terrain System'
+            ],
+            'Cherokee Sport': [
+                'Apple CarPlay & Android Auto',
+                '8.4" Touchscreen',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                '6 Airbags',
+                '4WD System'
+            ],
+            'Cherokee Longitude': [
+                'Apple CarPlay & Android Auto',
+                '8.4" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                '4WD System',
+                'Leather Interior'
+            ],
+            'Cherokee Trailhawk': [
+                'Apple CarPlay & Android Auto',
+                '8.4" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                '4WD System',
+                'Off-road Package',
+                'Selec-Terrain System'
+            ],
+            'Grand Cherokee Laredo': [
+                'Apple CarPlay & Android Auto',
+                '10.1" Touchscreen',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                '6 Airbags',
+                '4WD System',
+                '7 Seats'
+            ],
+            'Grand Cherokee Limited': [
+                'Apple CarPlay & Android Auto',
+                '10.1" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                '4WD System',
+                '7 Seats',
+                'Leather Interior',
+                'Panoramic Sunroof'
+            ],
+            'Grand Cherokee Summit': [
+                'Apple CarPlay & Android Auto',
+                '10.1" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                '4WD System',
+                '7 Seats',
+                'Premium Leather Interior',
+                'Panoramic Sunroof',
+                'Wireless Phone Charging'
+            ],
+            'Wrangler Sport': [
+                'Apple CarPlay & Android Auto',
+                '8.4" Touchscreen',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                '6 Airbags',
+                '4WD System',
+                'Removable Top',
+                'Removable Doors'
+            ],
+            'Wrangler Sahara': [
+                'Apple CarPlay & Android Auto',
+                '8.4" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                '4WD System',
+                'Removable Top',
+                'Removable Doors',
+                'Leather Interior'
+            ],
+            'Wrangler Rubicon': [
+                'Apple CarPlay & Android Auto',
+                '8.4" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                '4WD System',
+                'Removable Top',
+                'Removable Doors',
+                'Off-road Package',
+                'Rock-Trac System'
+            ],
+            'Gladiator Sport': [
+                'Apple CarPlay & Android Auto',
+                '8.4" Touchscreen',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                '6 Airbags',
+                '4WD System',
+                'Removable Top',
+                'Towing Capacity 3,500kg'
+            ],
+            'Gladiator Overland': [
+                'Apple CarPlay & Android Auto',
+                '8.4" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                '4WD System',
+                'Removable Top',
+                'Towing Capacity 3,500kg',
+                'Leather Interior'
+            ],
+            'Gladiator Rubicon': [
+                'Apple CarPlay & Android Auto',
+                '8.4" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                '4WD System',
+                'Removable Top',
+                'Towing Capacity 3,500kg',
+                'Off-road Package',
+                'Rock-Trac System'
+            ],
+            // Volvo Models
+            'XC40 Recharge': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Electric Powertrain',
+                'DC Fast Charging',
+                'Wireless Phone Charging'
+            ],
+            'XC40 B4': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Mild Hybrid Powertrain',
+                'Wireless Phone Charging'
+            ],
+            'XC40 B5': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Mild Hybrid Powertrain',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof'
+            ],
+            'XC60 Recharge': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Plug-in Hybrid Powertrain',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof'
+            ],
+            'XC60 B5': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Mild Hybrid Powertrain',
+                'Wireless Phone Charging'
+            ],
+            'XC60 B6': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Mild Hybrid Powertrain',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof',
+                'Air Suspension'
+            ],
+            'XC90 Recharge': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Plug-in Hybrid Powertrain',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof',
+                '7 Seats'
+            ],
+            'XC90 B5': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Mild Hybrid Powertrain',
+                'Wireless Phone Charging',
+                '7 Seats'
+            ],
+            'XC90 B6': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Mild Hybrid Powertrain',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof',
+                'Air Suspension',
+                '7 Seats'
+            ],
+            'C40 Recharge': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Electric Powertrain',
+                'DC Fast Charging',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof'
+            ],
+            'S60 Recharge': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Plug-in Hybrid Powertrain',
+                'Wireless Phone Charging'
+            ],
+            'S60 B4': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Mild Hybrid Powertrain',
+                'Wireless Phone Charging'
+            ],
+            'S60 B5': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Mild Hybrid Powertrain',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof'
+            ],
+            'V60 Recharge': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Plug-in Hybrid Powertrain',
+                'Wireless Phone Charging'
+            ],
+            'V60 B4': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Mild Hybrid Powertrain',
+                'Wireless Phone Charging'
+            ],
+            'V60 B5': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Mild Hybrid Powertrain',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof'
+            ],
+            'V90 Recharge': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Plug-in Hybrid Powertrain',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof'
+            ],
+            'V90 B5': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Mild Hybrid Powertrain',
+                'Wireless Phone Charging'
+            ],
+            'V90 B6': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '9" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Mild Hybrid Powertrain',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof',
+                'Air Suspension'
+            ],
+            // Polestar Models
+            'Polestar 2 Standard Range': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '11.15" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Electric Powertrain',
+                'DC Fast Charging',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof'
+            ],
+            'Polestar 2 Long Range': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '11.15" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Electric Powertrain',
+                'DC Fast Charging',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof',
+                'Extended Range Battery'
+            ],
+            'Polestar 2 Long Range Dual Motor': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '11.15" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Dual Motor Electric Powertrain',
+                'DC Fast Charging',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof',
+                'Extended Range Battery'
+            ],
+            'Polestar 2 Long Range Dual Motor Performance': [
+                'Google Built-in',
+                '12.3" Digital Driver Display',
+                '11.15" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Dual Motor Electric Powertrain',
+                'DC Fast Charging',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof',
+                'Extended Range Battery',
+                'Performance Package'
+            ],
+            'Polestar 3 Long Range Dual Motor': [
+                'Google Built-in',
+                '14.5" Digital Driver Display',
+                '14.5" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Dual Motor Electric Powertrain',
+                'DC Fast Charging',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof',
+                'Extended Range Battery'
+            ],
+            'Polestar 3 Long Range Dual Motor Performance': [
+                'Google Built-in',
+                '14.5" Digital Driver Display',
+                '14.5" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Dual Motor Electric Powertrain',
+                'DC Fast Charging',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof',
+                'Extended Range Battery',
+                'Performance Package'
+            ],
+            'Polestar 4 Long Range Single Motor': [
+                'Google Built-in',
+                '14.5" Digital Driver Display',
+                '14.5" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Single Motor Electric Powertrain',
+                'DC Fast Charging',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof',
+                'Extended Range Battery'
+            ],
+            'Polestar 4 Long Range Dual Motor': [
+                'Google Built-in',
+                '14.5" Digital Driver Display',
+                '14.5" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Dual Motor Electric Powertrain',
+                'DC Fast Charging',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof',
+                'Extended Range Battery'
+            ],
+            'Polestar 4 Long Range Dual Motor Performance': [
+                'Google Built-in',
+                '14.5" Digital Driver Display',
+                '14.5" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Dual Motor Electric Powertrain',
+                'DC Fast Charging',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof',
+                'Extended Range Battery',
+                'Performance Package'
+            ],
+            // Leapmotor Models
+            'T03': [
+                'Leapmotor OS',
+                '10.1" Touchscreen',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Electric Powertrain',
+                'DC Fast Charging',
+                'Wireless Phone Charging',
+                'Compact City Car'
+            ],
+            'C01': [
+                'Leapmotor OS',
+                '12.8" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Electric Powertrain',
+                'DC Fast Charging',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof'
+            ],
+            'C11': [
+                'Leapmotor OS',
+                '12.8" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Electric Powertrain',
+                'DC Fast Charging',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof',
+                '5 Seats'
+            ],
+            'C11 Extended Range': [
+                'Leapmotor OS',
+                '12.8" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Electric Powertrain',
+                'DC Fast Charging',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof',
+                '5 Seats',
+                'Extended Range Battery'
+            ],
+            // IM by MG Models
+            'IM5': [
+                'IM OS',
+                '12.3" Digital Driver Display',
+                '12.8" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Electric Powertrain',
+                'DC Fast Charging',
+                'Wireless Phone Charging',
+                '5 Seats'
+            ],
+            'IM6': [
+                'IM OS',
+                '12.3" Digital Driver Display',
+                '12.8" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Electric Powertrain',
+                'DC Fast Charging',
+                'Wireless Phone Charging',
+                '6 Seats',
+                'Panoramic Sunroof'
+            ],
+            // Leapmotor Models
+            'C10': [
+                'Leapmotor OS',
+                '14.6" Touchscreen',
+                '360° Camera',
+                'Rear Parking Sensors',
+                'LED Headlights',
+                'Auto Emergency Braking',
+                'Lane Departure Warning',
+                'Adaptive Cruise Control',
+                'Blind Spot Detection',
+                'Electric Powertrain',
+                'DC Fast Charging',
+                'Wireless Phone Charging',
+                'Panoramic Sunroof',
+                '5 Seats'
+            ]
+        };
+
+        // Model-specific colors for Australian specifications
+        const modelColors = {
+            // MG Models - Red theme
+            'MG3 Core': { primary: '#DC2626', accent: '#000000' },
+            'MG3 Excite': { primary: '#DC2626', accent: '#000000' },
+            'MG3 Essence Hybrid+': { primary: '#DC2626', accent: '#000000' },
+            'ZS Excite': { primary: '#DC2626', accent: '#000000' },
+            'ZS Essence': { primary: '#DC2626', accent: '#000000' },
+            'ZS Essence Turbo': { primary: '#DC2626', accent: '#000000' },
+            'ZS Hybrid+ Essence': { primary: '#DC2626', accent: '#000000' },
+            'ZS EV Excite': { primary: '#DC2626', accent: '#000000' },
+            'ZS EV Essence': { primary: '#DC2626', accent: '#000000' },
+            'HS Vibe': { primary: '#DC2626', accent: '#000000' },
+            'HS Excite': { primary: '#DC2626', accent: '#000000' },
+            'HS Essence': { primary: '#DC2626', accent: '#000000' },
+            'HS Plus EV Excite': { primary: '#DC2626', accent: '#000000' },
+            'HS Plus EV Essence': { primary: '#DC2626', accent: '#000000' },
+            
+            // LDV Models - Dark Grey theme
+            'T60 Max': { primary: '#374151', accent: '#000000' },
+            'T60 Pro': { primary: '#374151', accent: '#000000' },
+            'D90': { primary: '#374151', accent: '#000000' },
+            'D90 Pro': { primary: '#374151', accent: '#000000' },
+            'MIFA 9': { primary: '#374151', accent: '#000000' },
+            'MIFA 9 Luxury': { primary: '#374151', accent: '#000000' },
+            'eT60': { primary: '#374151', accent: '#000000' },
+            'eT60 Max': { primary: '#374151', accent: '#000000' },
+            
+            // Jeep Models - Black and Camo Green theme
+            'Compass Sport': { primary: '#000000', accent: '#4B5320' },
+            'Compass Longitude': { primary: '#000000', accent: '#4B5320' },
+            'Compass Trailhawk': { primary: '#000000', accent: '#4B5320' },
+            'Cherokee Sport': { primary: '#000000', accent: '#4B5320' },
+            'Cherokee Longitude': { primary: '#000000', accent: '#4B5320' },
+            'Cherokee Trailhawk': { primary: '#000000', accent: '#4B5320' },
+            'Grand Cherokee Laredo': { primary: '#000000', accent: '#4B5320' },
+            'Grand Cherokee Limited': { primary: '#000000', accent: '#4B5320' },
+            'Grand Cherokee Summit': { primary: '#000000', accent: '#4B5320' },
+            'Wrangler Sport': { primary: '#000000', accent: '#4B5320' },
+            'Wrangler Sahara': { primary: '#000000', accent: '#4B5320' },
+            'Wrangler Rubicon': { primary: '#000000', accent: '#4B5320' },
+            'Gladiator Sport': { primary: '#000000', accent: '#4B5320' },
+            'Gladiator Overland': { primary: '#000000', accent: '#4B5320' },
+            'Gladiator Rubicon': { primary: '#000000', accent: '#4B5320' },
+            // Volvo Models - Volvo Blue theme
+            'XC40 Recharge': { primary: '#003057', accent: '#374151' },
+            'XC40 B4': { primary: '#003057', accent: '#374151' },
+            'XC40 B5': { primary: '#003057', accent: '#374151' },
+            'XC60 Recharge': { primary: '#003057', accent: '#374151' },
+            'XC60 B5': { primary: '#003057', accent: '#374151' },
+            'XC60 B6': { primary: '#003057', accent: '#374151' },
+            'XC90 Recharge': { primary: '#003057', accent: '#374151' },
+            'XC90 B5': { primary: '#003057', accent: '#374151' },
+            'XC90 B6': { primary: '#003057', accent: '#374151' },
+            'C40 Recharge': { primary: '#003057', accent: '#374151' },
+            'S60 Recharge': { primary: '#003057', accent: '#374151' },
+            'S60 B4': { primary: '#003057', accent: '#374151' },
+            'S60 B5': { primary: '#003057', accent: '#374151' },
+            'V60 Recharge': { primary: '#003057', accent: '#374151' },
+            'V60 B4': { primary: '#003057', accent: '#374151' },
+            'V60 B5': { primary: '#003057', accent: '#374151' },
+            'V90 Recharge': { primary: '#003057', accent: '#374151' },
+            'V90 B5': { primary: '#003057', accent: '#374151' },
+            'V90 B6': { primary: '#003057', accent: '#374151' },
+            
+            // Polestar Models - Black and White theme
+            'Polestar 2 Standard Range': { primary: '#000000', accent: '#374151' },
+            'Polestar 2 Long Range': { primary: '#000000', accent: '#374151' },
+            'Polestar 2 Long Range Dual Motor': { primary: '#000000', accent: '#374151' },
+            'Polestar 2 Long Range Dual Motor Performance': { primary: '#000000', accent: '#374151' },
+            'Polestar 3 Long Range Dual Motor': { primary: '#000000', accent: '#374151' },
+            'Polestar 3 Long Range Dual Motor Performance': { primary: '#000000', accent: '#374151' },
+            'Polestar 4 Long Range Single Motor': { primary: '#000000', accent: '#374151' },
+            'Polestar 4 Long Range Dual Motor': { primary: '#000000', accent: '#374151' },
+            'Polestar 4 Long Range Dual Motor Performance': { primary: '#000000', accent: '#374151' },
+            
+            // Leapmotor Models - Leapmotor Blue theme
+            'T03': { primary: '#00A3E0', accent: '#000000' },
+            'C01': { primary: '#00A3E0', accent: '#000000' },
+            'C11': { primary: '#00A3E0', accent: '#000000' },
+            'C11 Extended Range': { primary: '#00A3E0', accent: '#000000' },
+            
+            // IM by MG Models - IM Blue theme
+            'IM5': { primary: '#1E3A8A', accent: '#374151' },
+            'IM6': { primary: '#1E3A8A', accent: '#374151' },
+            'C10': { primary: '#1E3A8A', accent: '#374151' },
+            
+            // IM by MG Models - Black and Dark Grey theme
+            'IM5': { primary: '#000000', accent: '#374151' },
+            'IM6': { primary: '#000000', accent: '#374151' },
+            
+            // Leapmotor Models - Black and Green theme
+            'C10': { primary: '#000000', accent: '#059669' }
+        };
+
+        let isModernTheme = false;
+        let isLimitedStock = false;
+
+        // Toggle modern theme function
+        function toggleModernTheme() {
+            isModernTheme = !isModernTheme;
+            applyModernTheme();
+            
+            // Update button text
+            const themeButton = document.querySelector('button[onclick="toggleModernTheme()"]');
+            themeButton.textContent = isModernTheme ? '🎨 Traditional' : '🎨 Modern Sharp';
+        }
+
+        // Apply modern theme styling
+        function applyModernTheme() {
+            const flyer = document.querySelector('.a4-flyer');
+            const allRoundedElements = document.querySelectorAll('.rounded-lg, .rounded-xl, .rounded-md');
+            
+            if (isModernTheme) {
+                // Modern sharp theme
+                flyer.style.borderRadius = '0px';
+                flyer.style.boxShadow = '0 8px 32px 0 rgba(0,0,0,0.12)';
+                
+                // Remove rounded corners from all elements
+                allRoundedElements.forEach(el => {
+                    el.style.borderRadius = '0px';
+                });
+                
+                // Update pricing box
+                const pricingBox = document.querySelector('.bg-accent\\/30');
+                if (pricingBox) {
+                    pricingBox.style.borderRadius = '0px';
+                }
+                
+                // Update image containers
+                const imageContainers = document.querySelectorAll('.bg-gray-50');
+                imageContainers.forEach(container => {
+                    container.style.borderRadius = '0px';
+                });
+                
+                // Update features container
+                const featuresContainer = document.querySelector('.bg-accent\\/20');
+                if (featuresContainer) {
+                    featuresContainer.style.borderRadius = '0px';
+                }
+                
+            } else {
+                // Traditional rounded theme
+                flyer.style.borderRadius = '18px';
+                flyer.style.boxShadow = '0 4px 32px 0 rgba(0,0,0,0.10)';
+                
+                // Restore rounded corners
+                allRoundedElements.forEach(el => {
+                    const classes = el.className;
+                    if (classes.includes('rounded-lg')) {
+                        el.style.borderRadius = '8px';
+                    } else if (classes.includes('rounded-xl')) {
+                        el.style.borderRadius = '12px';
+                    } else if (classes.includes('rounded-md')) {
+                        el.style.borderRadius = '6px';
+                    }
+                });
+                
+                // Update pricing box
+                const pricingBox = document.querySelector('.bg-accent\\/30');
+                if (pricingBox) {
+                    pricingBox.style.borderRadius = '8px';
+                }
+                
+                // Update image containers
+                const imageContainers = document.querySelectorAll('.bg-gray-50');
+                imageContainers.forEach(container => {
+                    container.style.borderRadius = '12px';
+                });
+                
+                // Update features container
+                const featuresContainer = document.querySelector('.bg-accent\\/20');
+                if (featuresContainer) {
+                    featuresContainer.style.borderRadius = '8px';
+                }
+            }
+        }
+
+        // Update preview function
+        function updatePreview() {
+            // Update brand/dealer name
+            const brandName = formElements.brandLogo.value;
+            previewElements.brandLogo.textContent = brandName || 'Brand Logo';
+
+            // Update headline (without pricing)
+            const headlineOverride = formElements.headlineOverride.value;
+            if (headlineOverride.trim()) {
+                // Remove pricing from headline override if it contains pricing
+                let cleanHeadline = headlineOverride;
+                if (cleanHeadline.includes('RRP') || cleanHeadline.includes('Sale')) {
+                    cleanHeadline = cleanHeadline.split('—')[0].trim();
+                }
+                previewElements.headline.textContent = cleanHeadline;
+            } else {
+                // Auto-generate headline without pricing
+                const model = formElements.customModel.value || formElements.modelSelect.value;
+                const color = formElements.customColor.value;
+                
+                console.log('Model:', model, 'Color:', color); // Debug log
+                
+                if (model && color) {
+                    previewElements.headline.textContent = `${model} in ${color}`;
+                } else if (model) {
+                    previewElements.headline.textContent = `${model}`;
+                } else {
+                    previewElements.headline.textContent = 'ZS Hybrid+ Essence in Sloane Silver';
+                }
+            }
+
+            // Update pricing
+            const salePrice = formElements.salePrice.value || '$31,490';
+            
+            // Only show sale price
+            previewElements.salePrice.textContent = salePrice;
+
+            // Update warranty
+            const warranty = formElements.warranty.value || '10-Year Warranty / 250,000 km Coverage';
+            previewElements.warranty.textContent = warranty;
+
+            // Update key features
+            const features = formElements.keyFeatures.value;
+            if (features.trim()) {
+                const featureList = features.split('\n').filter(feature => feature.trim());
+                if (featureList.length > 0) {
+                    const leftColumn = [];
+                    const rightColumn = [];
+                    // Limit to maximum 10 features
+                    const limitedFeatures = featureList.slice(0, 10);
+                    limitedFeatures.forEach((feature, index) => {
+                        const cleanFeature = feature.replace(/^[•\-\*]\s*/, '').trim();
+                        if (cleanFeature) {
+                            const featureHtml = `<p class="text-base text-gray-700">• ${cleanFeature}</p>`;
+                        if (index % 2 === 0) {
+                            leftColumn.push(featureHtml);
+                        } else {
+                            rightColumn.push(featureHtml);
+                            }
+                        }
+                    });
+                    previewElements.keyFeatures.innerHTML = `
+                        <div class="grid grid-cols-2 gap-x-8 gap-y-2">
+                            <div>${leftColumn.join('')}</div>
+                            <div>${rightColumn.join('')}</div>
+                        </div>
+                    `;
+                } else {
+                    previewElements.keyFeatures.innerHTML = '<p class="text-base text-gray-600 italic text-center">No features added yet</p>';
+                }
+            } else {
+                previewElements.keyFeatures.innerHTML = '<p class="text-base text-gray-600 italic text-center">No features added yet</p>';
+            }
+            
+            // Apply modern theme if active
+            if (isModernTheme) {
+                applyModernTheme();
+            }
+
+            // Update loyalty/fleet program message
+            const loyaltyOverride = formElements.loyaltyOverride.value;
+            if (loyaltyOverride.trim()) {
+                previewElements.loyaltyProgram.textContent = loyaltyOverride;
+            } else {
+                // Use the default dealer message (already set by updateDealerConfig)
+            }
+        }
+
+        // Handle image uploads
+        function handleImageUpload(event, previewElement) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewElement.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Update theme colors
+        function updateThemeColors() {
+            const primaryColor = primaryColorPicker.value;
+            const accentColor = accentColorPicker.value;
+            
+            // Update CSS custom properties
+            document.documentElement.style.setProperty('--primary-color', primaryColor);
+            document.documentElement.style.setProperty('--accent-color', accentColor);
+            
+            // Update Tailwind classes dynamically
+            const primaryElements = document.querySelectorAll('.text-primary, .bg-primary');
+            const accentElements = document.querySelectorAll('.border-accent, .bg-accent');
+            
+            primaryElements.forEach(el => {
+                if (el.classList.contains('text-primary')) {
+                    el.style.color = primaryColor;
+                }
+                if (el.classList.contains('bg-primary')) {
+                    el.style.backgroundColor = primaryColor;
+                }
+            });
+            
+            accentElements.forEach(el => {
+                if (el.classList.contains('border-accent')) {
+                    el.style.borderColor = accentColor;
+                }
+                if (el.classList.contains('bg-accent')) {
+                    el.style.backgroundColor = accentColor;
+                }
+            });
+
+            // Update pricing box background
+            const pricingBox = document.querySelector('.bg-accent\\/30');
+            if (pricingBox) {
+                const rgbaColor = hexToRgba(accentColor, 0.3);
+                pricingBox.style.backgroundColor = rgbaColor;
+            }
+        }
+
+        // Helper function to convert hex to rgba
+        function hexToRgba(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        // Reset colors to default
+        function resetColors() {
+            primaryColorPicker.value = '#FF6B35';
+            accentColorPicker.value = '#FFD23F';
+            updateThemeColors();
+        }
+
+        // Download PDF function
+        function downloadPDF() {
+            // Ensure preview is up to date
+            updatePreview();
+            
+            // Apply any pending theme changes
+            if (isModernTheme) {
+                applyModernTheme();
+            }
+            
+            // Update theme colors to ensure they're applied
+            updateThemeColors();
+            
+            const element = document.getElementById('flyerContent');
+            const opt = {
+                margin: [10, 10, 10, 10], // Small margins
+                filename: 'mg-vehicle-flyer.pdf',
+                image: { type: 'jpeg', quality: 1.0 },
+                html2canvas: { 
+                    scale: 3,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    width: 794, // A4 width in pixels
+                    height: 1123 // A4 height in pixels
+                },
+                jsPDF: { 
+                    unit: 'mm', 
+                    format: 'a4', 
+                    orientation: 'portrait' 
+                }
+            };
+
+            // Show loading indicator
+            const downloadButton = document.querySelector('button[onclick="downloadPDF()"]');
+            const originalText = downloadButton.textContent;
+            downloadButton.textContent = '⏳ Generating PDF...';
+            downloadButton.disabled = true;
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Restore button
+                downloadButton.textContent = originalText;
+                downloadButton.disabled = false;
+            }).catch((error) => {
+                console.error('PDF generation failed:', error);
+                downloadButton.textContent = originalText;
+                downloadButton.disabled = false;
+                alert('PDF generation failed. Please try again.');
+            });
+        }
+
+        // Update dealer configuration
+        function updateDealerConfig() {
+            const selectedDealer = formElements.brandLogo.value;
+            const config = dealerConfigs[selectedDealer];
+            
+            if (config) {
+                // Update color pickers
+                primaryColorPicker.value = config.primaryColor;
+                accentColorPicker.value = config.accentColor;
+                updateThemeColors();
+                
+                // Update warranty
+                formElements.warranty.value = config.warranty;
+                
+                // Update loyalty program message
+                previewElements.loyaltyProgram.textContent = config.loyaltyProgram;
+                
+                // Show/hide model selector based on dealer
+                const modelSelectContainer = formElements.modelSelect.parentElement;
+                if (selectedDealer === 'Sunco Used') {
+                    modelSelectContainer.style.display = 'none';
+                    formElements.modelSelect.value = '';
+                } else {
+                    modelSelectContainer.style.display = 'block';
+                    
+                    // Update model dropdown
+                    const modelSelect = formElements.modelSelect;
+                    modelSelect.innerHTML = '<option value="">Select a model...</option>';
+                    config.models.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model;
+                        option.textContent = model;
+                        modelSelect.appendChild(option);
+                    });
+                }
+                
+                // Update preview
+                updatePreview();
+            }
+        }
+
+        // Update features based on selected model
+        function updateModelFeatures() {
+            const selectedModel = formElements.modelSelect.value || formElements.customModel.value;
+            
+            if (selectedModel && modelFeatures[selectedModel]) {
+                const features = modelFeatures[selectedModel];
+                formElements.keyFeatures.value = features.map(feature => `• ${feature}`).join('\n');
+                
+                // Update brand colors based on model
+                if (modelColors[selectedModel]) {
+                    const colors = modelColors[selectedModel];
+                    primaryColorPicker.value = colors.primary;
+                    accentColorPicker.value = colors.accent;
+                    updateThemeColors();
+                }
+            }
+            
+            // Always update preview when model changes
+            updatePreview();
+        }
+
+        // Add event listeners
+        Object.values(formElements).forEach(element => {
+            if (element.type === 'file') {
+                if (element.id === 'vehicleImage') {
+                    element.addEventListener('change', (e) => handleImageUpload(e, previewElements.vehicleImage));
+                } else if (element.id === 'vehicleImage2') {
+                    element.addEventListener('change', (e) => handleImageUpload(e, previewElements.vehicleImage2));
+                }
+            } else if (element.id !== 'modelSelect' && element.id !== 'customModel') {
+                // Don't add updatePreview listener to model fields as they have their own handlers
+                element.addEventListener('input', updatePreview);
+            }
+        });
+
+        // Brand/dealer selection listener
+        formElements.brandLogo.addEventListener('change', updateDealerConfig);
+
+        // Model selection listeners for automatic feature updates
+        formElements.modelSelect.addEventListener('change', function() {
+            updateModelFeatures();
+            updatePreview(); // Ensure preview is updated
+        });
+        formElements.customModel.addEventListener('input', function() {
+            updateModelFeatures();
+            updatePreview(); // Ensure preview is updated
+        });
+
+        // Theme color change listeners
+        primaryColorPicker.addEventListener('change', updateThemeColors);
+        accentColorPicker.addEventListener('change', updateThemeColors);
+
+        // Initialize preview
+        updatePreview();
+        
+        // Initialize dealer configuration since MG is default
+        updateDealerConfig();
+
+        // Add keyboard shortcut for auto-fill (Ctrl+Enter or Cmd+Enter)
+        formElements.websiteUrl.addEventListener('keydown', function(event) {
+            if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                event.preventDefault();
+                scrapeWebsite();
+            }
+        });
+
+        // Toggle badge dropdown
+        function toggleBadgeDropdown() {
+            const dropdown = document.getElementById('badgeDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        // Set badge text
+        function setBadge(text) {
+            const badge = document.getElementById('limitedStockBadge');
+            badge.textContent = text;
+            badge.classList.remove('hidden');
+            isLimitedStock = true;
+            
+            // Close dropdown
+            document.getElementById('badgeDropdown').classList.add('hidden');
+        }
+
+        // Remove badge
+        function removeBadge() {
+            const badge = document.getElementById('limitedStockBadge');
+            badge.classList.add('hidden');
+            isLimitedStock = false;
+            
+            // Close dropdown
+            document.getElementById('badgeDropdown').classList.add('hidden');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('badgeDropdown');
+            const button = document.querySelector('button[onclick="toggleBadgeDropdown()"]');
+            
+            if (!dropdown.contains(event.target) && !button.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Web scraping functionality
+        async function scrapeWebsite() {
+            const url = formElements.websiteUrl.value.trim();
+            const statusDiv = document.getElementById('scrapingStatus');
+            
+            if (!url) {
+                showStatus('Please enter a valid URL', 'error');
+                return;
+            }
+
+            // Special message for Sunco Motors URLs
+            if (url.includes('suncomotors.com.au')) {
+                showStatus('🔍 Analyzing Sunco Motors listing...', 'loading');
+                try {
+                    const response = await fetch('http://localhost:3000/scrape', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url }),
+                        signal: AbortSignal.timeout(60000) // 60 second timeout
+                    });
+                    console.log('Response status:', response.status);
+                    console.log('Response ok:', response.ok);
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Server response:', errorText);
+                        throw new Error(`Server error: ${response.status} - ${errorText}`);
+                    }
+                    const result = await response.json();
+                    console.log('Received data:', result);
+                    if (result.success && result.data) {
+                        showStatus('✅ Successfully extracted vehicle data! Drag items to form fields.', 'success');
+                        showScrapedDataPreview(result.data);
+                    } else {
+                        showStatus('❌ ' + (result.error || 'Failed to scrape data'), 'error');
+                    }
+                } catch (error) {
+                    console.error('Scraping error:', error);
+                    showStatus('❌ Error: ' + error.message, 'error');
+                }
+                return;
+            }
+
+            showStatus('🔍 Analyzing website...', 'loading');
+            
+            try {
+                // Try multiple CORS proxies in case one fails
+                const proxies = [
+                    'https://api.allorigins.win/raw?url=',
+                    'https://cors-anywhere.herokuapp.com/',
+                    'https://thingproxy.freeboard.io/fetch/'
+                ];
+                
+                let html = null;
+                let lastError = null;
+                
+                for (const proxy of proxies) {
+                    try {
+                        const response = await fetch(proxy + encodeURIComponent(url), {
+                            timeout: 10000 // 10 second timeout
+                        });
+                        
+                        if (response.ok) {
+                            html = await response.text();
+                            break;
+                        }
+                    } catch (error) {
+                        lastError = error;
+                        continue;
+                    }
+                }
+                
+                if (!html) {
+                    throw new Error('Unable to access website. This may be due to CORS restrictions or the website blocking automated access.');
+                }
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Extract vehicle information
+                const vehicleData = extractVehicleData(doc, url);
+                
+                if (vehicleData) {
+                    fillFormWithData(vehicleData);
+                    showStatus('✅ Successfully extracted vehicle data!', 'success');
+                } else {
+                    showStatus('⚠️ Could not extract vehicle data from this website. Try copying the details manually.', 'warning');
+                }
+                
+            } catch (error) {
+                console.error('Scraping error:', error);
+                showStatus('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        function extractVehicleData(doc, url) {
+            const data = {};
+            
+            // Special handling for Sunco Motors URLs
+            if (url.includes('suncomotors.com.au')) {
+                // Extract information from URL structure: https://suncomotors.com.au/u51593-942880-mitsubishi-mirage-2014.html
+                const urlMatch = url.match(/suncomotors\.com\.au\/([^\/]+)\.html/);
+                if (urlMatch) {
+                    const urlParts = urlMatch[1].split('-');
+                    // Extract year (last part that's a 4-digit number)
+                    const yearMatch = urlParts.find(part => /^\d{4}$/.test(part));
+                    if (yearMatch) {
+                        data.year = yearMatch;
+                    }
+                    // Extract brand and model (parts before the year)
+                    const brandModelParts = urlParts.filter(part => !/^\d{4}$/.test(part) && !/^\d+$/.test(part));
+                    if (brandModelParts.length >= 2) {
+                        data.brand = brandModelParts[0];
+                        data.model = brandModelParts.slice(1).join(' ');
+                    }
+                }
+                // --- Robust bullet point parsing ---
+                // Find all bullet points (e.g., * WHITE, * 100,215 kms, etc.)
+                const bulletPoints = Array.from(doc.querySelectorAll('li, p, span, div')).map(el => el.textContent.trim()).filter(t => t.startsWith('*'));
+                bulletPoints.forEach(point => {
+                    const clean = point.replace(/^\*\s*/, '').trim();
+                    if (/kms|km|odometer|mileage/i.test(clean)) {
+                        data.mileage = clean.replace(/\s*kms?/i, '').replace(/,/g, '').trim();
+                    } else if (/white|black|red|blue|silver|grey|gray|green|yellow|purple|orange|brown|beige|gold|bronze|maroon|midnight|crimson|pearl|ivory|charcoal|cream|pink|teal|turquoise|burgundy|copper|platinum|magenta|lime|tan|navy|aqua|azure|cherry|peach|rose|sand|sky|slate|steel|sunset|wine/i.test(clean)) {
+                        data.color = clean;
+                    } else if (/automatic|manual|cvt|dct|transmission/i.test(clean)) {
+                        data.transmission = clean;
+                    } else if (/hatch|sedan|ute|wagon|van|coupe|suv|convertible|body/i.test(clean)) {
+                        data.body = clean;
+                    } else if (/petrol|diesel|hybrid|electric|fuel/i.test(clean)) {
+                        data.fuel = clean;
+                    } else if (/^\d{4}$/.test(clean)) {
+                        data.year = clean;
+                    }
+                });
+                // Try to get color from the first bullet if not found
+                if (!data.color && bulletPoints.length > 0) {
+                    const first = bulletPoints[0].replace(/^\*\s*/, '').trim();
+                    if (/^[a-zA-Z ]+$/.test(first)) data.color = first;
+                }
+                // --- Gallery images ---
+                let images = [];
+                // Try common gallery selectors
+                const galleryImgs = doc.querySelectorAll('.gallery img, .gallery-image img, .vehicle-images img, .main-image img, .vehicle-gallery img, .images img, img');
+                images = Array.from(galleryImgs).map(img => img.src || img.getAttribute('data-src')).filter(Boolean);
+                if (images.length > 0) {
+                    data.images = images;
+                }
+                // --- Title/model fallback ---
+                const titleEl = doc.querySelector('h1, .vehicle-title, .title, .listing-title, .car-title');
+                if (titleEl) {
+                    data.title = titleEl.textContent.trim();
+                    if (!data.model) {
+                        // Try to extract model from title
+                        const titleWords = data.title.split(' ');
+                        if (titleWords.length > 1) {
+                            data.model = titleWords.slice(1).join(' ');
+                        }
+                    }
+                }
+                // --- Features/specs ---
+                data.features = bulletPoints.map(point => point.replace(/^\*\s*/, '').trim());
+            }
+            
+            // Common selectors for different car websites
+            const selectors = {
+                // Sunco Motors website
+                'suncomotors.com.au': {
+                    title: 'h1.vehicle-title, h1, .title, .vehicle-name, .listing-title, .car-title',
+                    price: '.price, .vehicle-price, .listing-price, .sale-price, [class*="price"], .cost, .amount',
+                    model: '.vehicle-details .model, .vehicle-info .model, .specs .model, .vehicle-specs .model, .car-model',
+                    year: '.vehicle-details .year, .vehicle-info .year, .specs .year, .vehicle-specs .year, .car-year',
+                    color: '.vehicle-details .colour, .vehicle-info .colour, .specs .colour, .vehicle-specs .colour, .exterior-colour, .car-colour',
+                    features: '.features-list li, .vehicle-features li, .specifications li, .specs li, .features li, .equipment li',
+                    images: '.gallery-image img, .vehicle-images img, .main-image img, .vehicle-gallery img, .images img, .car-images img',
+                    mileage: '.mileage, .odometer, .kms, [class*="mileage"], [class*="odometer"], .kilometers',
+                    transmission: '.transmission, .trans, [class*="transmission"], .gear',
+                    fuel: '.fuel-type, .fuel, [class*="fuel"], .fuel-type',
+                    body: '.body-type, .body, [class*="body"], .car-body'
+                },
+                // Carsales.com.au
+                'carsales.com.au': {
+                    title: 'h1[data-testid="vehicle-title"], .vehicle-title, h1',
+                    price: '[data-testid="price"], .price, .vehicle-price',
+                    model: '.vehicle-details .model, .vehicle-info .model',
+                    year: '.vehicle-details .year, .vehicle-info .year',
+                    color: '.vehicle-details .colour, .vehicle-info .colour, .exterior-colour',
+                    features: '.features-list li, .vehicle-features li, .specifications li',
+                    images: '.gallery-image img, .vehicle-images img, .main-image img'
+                },
+                // CarGuide.com.au
+                'carguide.com.au': {
+                    title: 'h1, .vehicle-title, .car-title',
+                    price: '.price, .vehicle-price, .listing-price',
+                    model: '.vehicle-details .model, .car-details .model',
+                    year: '.vehicle-details .year, .car-details .year',
+                    color: '.vehicle-details .colour, .car-details .colour',
+                    features: '.features li, .specifications li, .car-features li',
+                    images: '.gallery img, .car-images img, .main-image img'
+                },
+                // Gumtree.com.au
+                'gumtree.com.au': {
+                    title: 'h1, .listing-title, .ad-title',
+                    price: '.price, .listing-price, .ad-price',
+                    model: '.vehicle-details .model, .car-details .model',
+                    year: '.vehicle-details .year, .car-details .year',
+                    color: '.vehicle-details .colour, .car-details .colour',
+                    features: '.features li, .specifications li, .ad-features li',
+                    images: '.gallery img, .ad-images img, .main-image img'
+                },
+                // Facebook Marketplace
+                'facebook.com': {
+                    title: 'h1, .marketplace-title, .listing-title',
+                    price: '.price, .marketplace-price, .listing-price',
+                    model: '.vehicle-details .model, .car-details .model',
+                    year: '.vehicle-details .year, .car-details .year',
+                    color: '.vehicle-details .colour, .car-details .colour',
+                    features: '.features li, .specifications li, .listing-features li',
+                    images: '.gallery img, .listing-images img, .main-image img'
+                }
+            };
+
+            // Determine which website we're scraping
+            let websiteType = 'generic';
+            for (const [domain, selectorSet] of Object.entries(selectors)) {
+                if (url.includes(domain)) {
+                    websiteType = domain;
+                    break;
+                }
+            }
+
+            const currentSelectors = selectors[websiteType] || selectors['carsales.com.au'];
+
+            // Extract title
+            const titleElement = doc.querySelector(currentSelectors.title);
+            if (titleElement) {
+                data.title = titleElement.textContent.trim();
+            }
+
+            // Extract price
+            const priceElement = doc.querySelector(currentSelectors.price);
+            if (priceElement) {
+                const priceText = priceElement.textContent.trim();
+                // Extract numeric price
+                const priceMatch = priceText.match(/[\$]?[\d,]+/);
+                if (priceMatch) {
+                    data.price = priceMatch[0].startsWith('$') ? priceMatch[0] : '$' + priceMatch[0];
+                }
+            }
+
+            // Extract model and year
+            const modelElement = doc.querySelector(currentSelectors.model);
+            const yearElement = doc.querySelector(currentSelectors.year);
+            
+            if (modelElement) {
+                data.model = modelElement.textContent.trim();
+            }
+            if (yearElement) {
+                data.year = yearElement.textContent.trim();
+            }
+
+            // Extract color
+            const colorElement = doc.querySelector(currentSelectors.color);
+            if (colorElement) {
+                data.color = colorElement.textContent.trim();
+            }
+
+            // Extract features
+            const featureElements = doc.querySelectorAll(currentSelectors.features);
+            if (featureElements.length > 0) {
+                data.features = Array.from(featureElements).map(el => el.textContent.trim()).filter(text => text.length > 0);
+            }
+
+            // Extract additional specifications for Sunco Motors
+            if (websiteType === 'suncomotors.com.au') {
+                // Extract mileage
+                const mileageElement = doc.querySelector(currentSelectors.mileage);
+                if (mileageElement) {
+                    data.mileage = mileageElement.textContent.trim();
+                }
+
+                // Extract transmission
+                const transmissionElement = doc.querySelector(currentSelectors.transmission);
+                if (transmissionElement) {
+                    data.transmission = transmissionElement.textContent.trim();
+                }
+
+                // Extract fuel type
+                const fuelElement = doc.querySelector(currentSelectors.fuel);
+                if (fuelElement) {
+                    data.fuel = fuelElement.textContent.trim();
+                }
+
+                // Extract body type
+                const bodyElement = doc.querySelector(currentSelectors.body);
+                if (bodyElement) {
+                    data.body = bodyElement.textContent.trim();
+                }
+            }
+
+            // Extract images
+            const imageElements = doc.querySelectorAll(currentSelectors.images);
+            if (imageElements.length > 0) {
+                data.images = Array.from(imageElements).map(img => img.src || img.getAttribute('data-src')).filter(src => src);
+            }
+
+            // Generic fallback extraction
+            if (!data.title) {
+                const h1Elements = doc.querySelectorAll('h1');
+                for (const h1 of h1Elements) {
+                    const text = h1.textContent.trim();
+                    if (text.length > 10 && text.length < 100) {
+                        data.title = text;
+                        break;
+                    }
+                }
+            }
+
+            if (!data.price) {
+                const pricePatterns = [
+                    /\$[\d,]+/g,
+                    /[\d,]+\s*dollars?/gi,
+                    /price:\s*\$?[\d,]+/gi
+                ];
+                
+                for (const pattern of pricePatterns) {
+                    const matches = doc.body.textContent.match(pattern);
+                    if (matches && matches.length > 0) {
+                        data.price = matches[0];
+                        break;
+                    }
+                }
+            }
+
+            return Object.keys(data).length > 0 ? data : null;
+        }
+
+        function fillFormWithData(data) {
+            // Fill model - combine brand and model for Sunco Motors
+            if (data.brand && data.model) {
+                const fullModel = `${data.brand.charAt(0).toUpperCase() + data.brand.slice(1)} ${data.model.charAt(0).toUpperCase() + data.model.slice(1)}`;
+                formElements.customModel.value = fullModel;
+            } else if (data.model) {
+                formElements.customModel.value = data.model;
+            } else if (data.title) {
+                // Extract model from title
+                const titleWords = data.title.split(' ');
+                const modelKeywords = ['MG', 'ZS', 'HS', 'MG3', 'T60', 'D90', 'MIFA', 'Compass', 'Cherokee', 'Wrangler', 'Gladiator', 'XC40', 'XC60', 'XC90', 'Polestar', 'C10', 'IM5', 'IM6', 'Mitsubishi', 'Mirage', 'Lancer', 'Outlander', 'ASX', 'Eclipse', 'Pajero'];
+                for (const keyword of modelKeywords) {
+                    if (data.title.includes(keyword)) {
+                        formElements.customModel.value = keyword;
+                        break;
+                    }
+                }
+            }
+            // Fill color
+            if (data.color) {
+                formElements.customColor.value = data.color;
+            }
+            // Fill year (if you want to show it in a field, add here)
+            // Fill price
+            if (data.price) {
+                formElements.salePrice.value = data.price;
+            }
+            // Fill odometer/mileage
+            if (data.mileage) {
+                // Add to features if not already present
+                if (!data.features) data.features = [];
+                if (!data.features.some(f => f.toLowerCase().includes('odometer') || f.toLowerCase().includes('kms'))) {
+                    data.features.push(`Odometer: ${data.mileage}`);
+                }
+            }
+            // Fill transmission
+            if (data.transmission) {
+                if (!data.features) data.features = [];
+                if (!data.features.some(f => f.toLowerCase().includes('transmission'))) {
+                    data.features.push(`Transmission: ${data.transmission}`);
+                }
+            }
+            // Fill fuel
+            if (data.fuel) {
+                if (!data.features) data.features = [];
+                if (!data.features.some(f => f.toLowerCase().includes('fuel'))) {
+                    data.features.push(`Fuel Type: ${data.fuel}`);
+                }
+            }
+            // Fill body
+            if (data.body) {
+                if (!data.features) data.features = [];
+                if (!data.features.some(f => f.toLowerCase().includes('body'))) {
+                    data.features.push(`Body Type: ${data.body}`);
+                }
+            }
+            // Fill features
+            let features = [];
+            if (data.features && data.features.length > 0) {
+                features = data.features;
+            }
+            // Add year to features if available
+            if (data.year && !features.some(f => f.includes(data.year))) {
+                features.unshift(`${data.year} Model`);
+            }
+            if (features.length > 0) {
+                const featureText = features.map(feature => `• ${feature}`).join('\n');
+                formElements.keyFeatures.value = featureText;
+            }
+            // Fill headline override - enhanced for Sunco Motors
+            if (data.title) {
+                formElements.headlineOverride.value = data.title;
+            } else if (data.brand && data.model && data.year) {
+                const headline = `${data.brand.charAt(0).toUpperCase() + data.brand.slice(1)} ${data.model.charAt(0).toUpperCase() + data.model.slice(1)} ${data.year}`;
+                formElements.headlineOverride.value = headline;
+            }
+            // Fill images (use first two for preview)
+            if (data.images && data.images.length > 0) {
+                if (data.images[0]) {
+                    previewElements.vehicleImage.src = data.images[0];
+                }
+                if (data.images[1]) {
+                    previewElements.vehicleImage2.src = data.images[1];
+                }
+            }
+            // Auto-detect brand based on model/brand for Sunco Motors
+            if (data.brand || data.model || data.title) {
+                const text = (data.brand || data.model || data.title).toLowerCase();
+                if (text.includes('mg') || text.includes('zs') || text.includes('hs')) {
+                    formElements.brandLogo.value = 'Sunshine Coast MG';
+                } else if (text.includes('ldv') || text.includes('t60') || text.includes('d90') || text.includes('mifa')) {
+                    formElements.brandLogo.value = 'Sunshine Coast LDV';
+                } else if (text.includes('jeep') || text.includes('compass') || text.includes('cherokee') || text.includes('wrangler') || text.includes('gladiator')) {
+                    formElements.brandLogo.value = 'Jeep Maroochydore';
+                } else if (text.includes('volvo') || text.includes('xc40') || text.includes('xc60') || text.includes('xc90')) {
+                    formElements.brandLogo.value = 'Volvo Cars Sunshine Coast';
+                } else if (text.includes('polestar')) {
+                    formElements.brandLogo.value = 'Polestar Sunshine Coast';
+                } else if (text.includes('leapmotor') || text.includes('c10')) {
+                    formElements.brandLogo.value = 'Leapmotor Sunshine Coast';
+                } else if (text.includes('im5') || text.includes('im6')) {
+                    formElements.brandLogo.value = 'IM by MG';
+                } else if (text.includes('mitsubishi') || text.includes('mirage') || text.includes('lancer') || text.includes('outlander') || text.includes('asx') || text.includes('eclipse') || text.includes('pajero')) {
+                    formElements.brandLogo.value = 'Sunco Used';
+                }
+                updateDealerConfig();
+            }
+            updatePreview();
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('scrapingStatus');
+            statusDiv.textContent = message;
+            statusDiv.className = `mt-2 p-2 rounded-md text-sm ${getStatusClass(type)}`;
+            statusDiv.classList.remove('hidden');
+            
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.classList.add('hidden');
+                }, 5000);
+            }
+        }
+
+        function getStatusClass(type) {
+            switch (type) {
+                case 'success': return 'bg-green-100 text-green-800 border border-green-200';
+                case 'error': return 'bg-red-100 text-red-800 border border-red-200';
+                case 'warning': return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
+                case 'loading': return 'bg-blue-100 text-blue-800 border border-blue-200';
+                default: return 'bg-gray-100 text-gray-800 border border-gray-200';
+            }
+        }
+
+        // Add state for scraped data
+        let scrapedData = null;
+
+        // Update the Scraped Data Preview section with comprehensive data
+        function showScrapedDataPreview(data) {
+            scrapedData = data;
+            
+            // Show scraped data section
+            document.getElementById('scrapedDataSection').classList.remove('hidden');
+            
+            // Update metadata
+            const metadataInfo = document.getElementById('metadataInfo');
+            if (data.metadata) {
+                metadataInfo.innerHTML = `
+                    <span>📊 Total Images: ${data.metadata.totalImages}</span>
+                    <span>✨ Features: ${data.metadata.totalFeatures}</span>
+                    <span>⚙️ Specs: ${data.metadata.totalSpecs}</span>
+                    <span>📄 Text Blocks: ${data.metadata.totalTextBlocks}</span>
+                    <span>🕒 Scraped: ${new Date(data.metadata.scrapedAt).toLocaleString()}</span>
+                `;
+            }
+            
+            // Update counts
+            document.getElementById('imageCount').textContent = data.images ? data.images.length : 0;
+            document.getElementById('featureCount').textContent = data.features ? data.features.length : 0;
+            document.getElementById('specCount').textContent = data.specs ? data.specs.length : 0;
+            document.getElementById('pricingCount').textContent = data.pricing ? data.pricing.length : 0;
+            document.getElementById('contactCount').textContent = data.contact ? data.contact.length : 0;
+            document.getElementById('textCount').textContent = data.allText ? data.allText.length : 0;
+            
+            // Render Images
+            const imageGallery = document.getElementById('imageGallery');
+            imageGallery.innerHTML = '';
+            if (data.images && data.images.length > 0) {
+                data.images.forEach((img, index) => {
+                    const imgDiv = document.createElement('div');
+                    imgDiv.className = 'draggable-image';
+                    imgDiv.draggable = true;
+                    imgDiv.setAttribute('data-type', 'image');
+                    imgDiv.setAttribute('data-index', index);
+                    imgDiv.innerHTML = `<img src="${img.src}" alt="${img.alt || 'Vehicle Image'}" onerror="this.style.display='none'">`;
+                    imageGallery.appendChild(imgDiv);
+                });
+            }
+            
+            // Render Title
+            const titleSection = document.getElementById('titleSection');
+            titleSection.innerHTML = '';
+            if (data.title) {
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'draggable-item';
+                titleDiv.draggable = true;
+                titleDiv.setAttribute('data-type', 'title');
+                titleDiv.textContent = data.title;
+                titleSection.appendChild(titleDiv);
+            }
+            
+            // Render Features
+            const featuresSection = document.getElementById('featuresSection');
+            featuresSection.innerHTML = '';
+            if (data.features && data.features.length > 0) {
+                data.features.forEach((feature, index) => {
+                    const featureDiv = document.createElement('div');
+                    featureDiv.className = 'draggable-item';
+                    featureDiv.draggable = true;
+                    featureDiv.setAttribute('data-type', 'feature');
+                    featureDiv.setAttribute('data-index', index);
+                    featureDiv.textContent = feature;
+                    featuresSection.appendChild(featureDiv);
+                });
+            }
+            
+            // Render Specs
+            const specsSection = document.getElementById('specsSection');
+            specsSection.innerHTML = '';
+            if (data.specs && data.specs.length > 0) {
+                data.specs.forEach((spec, index) => {
+                    const specDiv = document.createElement('div');
+                    specDiv.className = 'draggable-item';
+                    specDiv.draggable = true;
+                    specDiv.setAttribute('data-type', 'spec');
+                    specDiv.setAttribute('data-index', index);
+                    specDiv.textContent = spec;
+                    specsSection.appendChild(specDiv);
+                });
+            }
+            
+            // Render Pricing
+            const pricingSection = document.getElementById('pricingSection');
+            pricingSection.innerHTML = '';
+            if (data.pricing && data.pricing.length > 0) {
+                data.pricing.forEach((price, index) => {
+                    const priceDiv = document.createElement('div');
+                    priceDiv.className = 'draggable-item';
+                    priceDiv.draggable = true;
+                    priceDiv.setAttribute('data-type', 'pricing');
+                    priceDiv.setAttribute('data-index', index);
+                    priceDiv.textContent = price;
+                    pricingSection.appendChild(priceDiv);
+                });
+            }
+            
+            // Render Contact
+            const contactSection = document.getElementById('contactSection');
+            contactSection.innerHTML = '';
+            if (data.contact && data.contact.length > 0) {
+                data.contact.forEach((contact, index) => {
+                    const contactDiv = document.createElement('div');
+                    contactDiv.className = 'draggable-item';
+                    contactDiv.draggable = true;
+                    contactDiv.setAttribute('data-type', 'contact');
+                    contactDiv.setAttribute('data-index', index);
+                    contactDiv.textContent = contact;
+                    contactSection.appendChild(contactDiv);
+                });
+            }
+            
+            // Render Description
+            const descriptionSection = document.getElementById('descriptionSection');
+            descriptionSection.innerHTML = '';
+            if (data.description) {
+                const descDiv = document.createElement('div');
+                descDiv.className = 'draggable-item';
+                descDiv.draggable = true;
+                descDiv.setAttribute('data-type', 'description');
+                descDiv.textContent = data.description.substring(0, 100) + (data.description.length > 100 ? '...' : '');
+                descriptionSection.appendChild(descDiv);
+            }
+            
+            // Render All Text
+            const allTextSection = document.getElementById('allTextSection');
+            allTextSection.innerHTML = '';
+            if (data.allText && data.allText.length > 0) {
+                data.allText.slice(0, 20).forEach((text, index) => {
+                    const textDiv = document.createElement('div');
+                    textDiv.className = 'draggable-item';
+                    textDiv.draggable = true;
+                    textDiv.setAttribute('data-type', 'text');
+                    textDiv.setAttribute('data-index', index);
+                    textDiv.textContent = text.substring(0, 50) + (text.length > 50 ? '...' : '');
+                    allTextSection.appendChild(textDiv);
+                });
+            }
+            
+            // Setup drag and drop
+            setupDragAndDrop();
+        }
+
+        // Setup drag and drop functionality
+        function setupDragAndDrop() {
+            // Make form fields droppable
+            const formFields = [
+                { element: formElements.headlineOverride, type: 'title' },
+                { element: formElements.customModel, type: 'title' },
+                { element: formElements.customColor, type: 'text' },
+                { element: formElements.keyFeatures, type: 'feature' },
+                { element: formElements.salePrice, type: 'pricing' },
+                { element: formElements.warranty, type: 'text' },
+                { element: formElements.loyaltyOverride, type: 'text' }
+            ];
+
+            formFields.forEach(field => {
+                field.element.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    field.element.classList.add('drag-over');
+                });
+
+                field.element.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    field.element.classList.remove('drag-over');
+                });
+
+                field.element.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    field.element.classList.remove('drag-over');
+                    
+                    const dataType = e.dataTransfer.getData('text/plain').split('|')[0];
+                    const dataIndex = parseInt(e.dataTransfer.getData('text/plain').split('|')[1]);
+                    
+                    if (scrapedData) {
+                        let content = '';
+                        
+                        switch (dataType) {
+                            case 'title':
+                                content = scrapedData.title || '';
+                                break;
+                            case 'feature':
+                                if (scrapedData.features && scrapedData.features[dataIndex]) {
+                                    content = scrapedData.features[dataIndex];
+                                }
+                                break;
+                            case 'spec':
+                                if (scrapedData.specs && scrapedData.specs[dataIndex]) {
+                                    content = scrapedData.specs[dataIndex];
+                                }
+                                break;
+                            case 'pricing':
+                                if (scrapedData.pricing && scrapedData.pricing[dataIndex]) {
+                                    content = scrapedData.pricing[dataIndex];
+                                }
+                                break;
+                            case 'text':
+                                if (scrapedData.allText && scrapedData.allText[dataIndex]) {
+                                    content = scrapedData.allText[dataIndex];
+                                }
+                                break;
+                            case 'description':
+                                content = scrapedData.description || '';
+                                break;
+                        }
+                        
+                        if (content) {
+                            if (field.element.tagName === 'TEXTAREA') {
+                                // For textareas, append to existing content
+                                const currentValue = field.element.value;
+                                field.element.value = currentValue ? currentValue + '\n• ' + content : '• ' + content;
+                            } else {
+                                field.element.value = content;
+                            }
+                            updatePreview();
+                        }
+                    }
+                });
+            });
+
+            // Make draggable items
+            document.querySelectorAll('.draggable-item, .draggable-image').forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    const dataType = item.getAttribute('data-type');
+                    const dataIndex = item.getAttribute('data-index') || '0';
+                    e.dataTransfer.setData('text/plain', `${dataType}|${dataIndex}`);
+                    e.dataTransfer.effectAllowed = 'copy';
+                });
+            });
+        }
+
+        // Handle image drops to preview
+        function setupImageDrop() {
+            const imageContainers = [
+                { element: previewElements.vehicleImage, field: formElements.vehicleImage },
+                { element: previewElements.vehicleImage2, field: formElements.vehicleImage2 }
+            ];
+
+            imageContainers.forEach(container => {
+                container.element.parentElement.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    container.element.parentElement.classList.add('drag-over');
+                });
+
+                container.element.parentElement.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    container.element.parentElement.classList.remove('drag-over');
+                });
+
+                container.element.parentElement.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    container.element.parentElement.classList.remove('drag-over');
+                    
+                    const dataType = e.dataTransfer.getData('text/plain').split('|')[0];
+                    const dataIndex = parseInt(e.dataTransfer.getData('text/plain').split('|')[1]);
+                    
+                    if (dataType === 'image' && scrapedData && scrapedData.images && scrapedData.images[dataIndex]) {
+                        container.element.src = scrapedData.images[dataIndex].src;
+                        updatePreview();
+                    }
+                });
+            });
+        }
+
+        // Toggle between form and scraped data view
+        function toggleFormView() {
+            document.getElementById('manualFormSection').classList.remove('hidden');
+            document.getElementById('scrapedDataSection').classList.add('hidden');
+        }
+
+        // Initialize drag and drop when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setupImageDrop();
+        });
+
+        // When scraping is successful, show the preview
+        function fillFormWithData(data) {
+            showScrapedDataPreview(data);
+            // ... existing fillFormWithData logic ...
+        }
+    </script>
+    <!-- Tutorial Trigger Button -->
+    <button id="tutorialButton" onclick="showTutorial()" class="fixed bottom-6 right-6 bg-primary text-white p-4 rounded-full shadow-lg hover:opacity-90 transition-opacity z-40">
+        <div class="text-2xl">❓</div>
+    </button>
+</body>
+</html> 

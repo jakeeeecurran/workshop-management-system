@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: workshop-server
+    env: node
+    rootDir: PD-Get-Ready/workshop-server
+    buildCommand: 'npm install'
+    startCommand: 'npm start'
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+    autoDeploy: true
+
+  - type: web
+    name: workshop-display
+    env: static
+    rootDir: workshop-display
+    buildCommand: 'npm install && npm run build'
+    staticPublishPath: 'dist'
+    plan: free
+    autoDeploy: true
+
+  - type: web
+    name: workshop-admin
+    env: static
+    rootDir: workshop-admin
+    buildCommand: 'npm install && npm run build'
+    staticPublishPath: 'dist'
+    plan: free
+    autoDeploy: true
+
+  - type: web
+    name: workshop-mobile
+    env: static
+    rootDir: workshop-mobile
+    buildCommand: 'npm install && npm run build'
+    staticPublishPath: 'dist'
+    plan: free
+    autoDeploy: true 
