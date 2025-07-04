@@ -136,6 +136,33 @@
             transform: scale(1.1);
         }
 
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .connection-status.connected {
+            background: #48bb78;
+            color: white;
+        }
+
+        .connection-status.disconnected {
+            background: #e53e3e;
+            color: white;
+        }
+
+        .connection-status.connecting {
+            background: #f6ad55;
+            color: white;
+        }
+
         .header.hidden {
             transform: translateY(-100%);
             opacity: 0;
@@ -655,10 +682,33 @@
                 font-size: 3rem;
             }
         }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container" id="container">
+        <div class="connection-status" id="connectionStatus">🔄 Connecting...</div>
         <button class="toggle-header-btn" onclick="workshopManager.toggleHeader()" title="Toggle Header">👁️</button>
         
         <div class="header" id="header">
@@ -783,6 +833,7 @@
         </div>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         class WorkshopManager {
             constructor() {
@@ -791,6 +842,7 @@
                 this.cardsContainer = document.getElementById('cardsContainer');
                 this.currentTab = 'pending';
                 this.editingEntry = null;
+                this.socket = null;
                 
                 this.initialize();
             }
@@ -798,6 +850,7 @@
             async initialize() {
                 await this.loadData();
                 this.renderCards();
+                this.initializeSocket();
                 
                 // Event listeners
                 document.getElementById('editForm').addEventListener('submit', (e) => this.handleEditSubmit(e));
@@ -808,9 +861,91 @@
                         this.closeModal();
                     }
                 });
+            }
 
-                // Auto-refresh data every 30 seconds
-                setInterval(() => this.loadData(), 30000);
+            initializeSocket() {
+                try {
+                    this.socket = io();
+                    
+                    // Listen for real-time updates
+                    this.socket.on('data-updated', (data) => {
+                        console.log('🔄 Received real-time update');
+                        this.entries = data.entries || [];
+                        this.completedEntries = data.completed || [];
+                        this.renderCards();
+                        this.showUpdateNotification();
+                    });
+                    
+                    // Request initial data
+                    this.socket.emit('request-data');
+                    
+                    // Handle connection status
+                    this.socket.on('connect', () => {
+                        console.log('🔄 Connected to real-time updates');
+                        this.updateConnectionStatus('connected');
+                    });
+                    
+                    this.socket.on('disconnect', () => {
+                        console.log('❌ Disconnected from real-time updates');
+                        this.updateConnectionStatus('disconnected');
+                    });
+                    
+                    this.socket.on('connect_error', () => {
+                        console.log('❌ Connection error');
+                        this.updateConnectionStatus('disconnected');
+                    });
+                    
+                } catch (error) {
+                    console.error('Error initializing socket:', error);
+                    this.updateConnectionStatus('disconnected');
+                }
+            }
+
+            updateConnectionStatus(status) {
+                const statusElement = document.getElementById('connectionStatus');
+                if (statusElement) {
+                    statusElement.className = `connection-status ${status}`;
+                    switch (status) {
+                        case 'connected':
+                            statusElement.textContent = '🟢 Live Updates';
+                            break;
+                        case 'disconnected':
+                            statusElement.textContent = '🔴 Offline';
+                            break;
+                        case 'connecting':
+                            statusElement.textContent = '🔄 Connecting...';
+                            break;
+                    }
+                }
+            }
+
+            showUpdateNotification() {
+                // Create a temporary notification
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 80px;
+                    left: 20px;
+                    background: #48bb78;
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    z-index: 1001;
+                    animation: slideIn 0.3s ease;
+                `;
+                notification.textContent = '🔄 Data updated in real-time';
+                document.body.appendChild(notification);
+                
+                // Remove after 3 seconds
+                setTimeout(() => {
+                    notification.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 300);
+                }, 3000);
             }
 
             async loadData() {

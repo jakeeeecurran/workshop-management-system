@@ -257,11 +257,13 @@
         </div>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         class VehicleForm {
             constructor() {
                 this.form = document.getElementById('workshopForm');
                 this.requiredDateTimeInput = document.getElementById('requiredDateTime');
+                this.socket = null;
                 
                 this.initialize();
             }
@@ -274,6 +276,24 @@
 
                 // Event listeners
                 this.form.addEventListener('submit', (e) => this.handleFormSubmit(e));
+                this.initializeSocket();
+            }
+
+            initializeSocket() {
+                try {
+                    this.socket = io();
+                    
+                    this.socket.on('connect', () => {
+                        console.log('🔄 Connected to real-time updates');
+                    });
+                    
+                    this.socket.on('disconnect', () => {
+                        console.log('❌ Disconnected from real-time updates');
+                    });
+                    
+                } catch (error) {
+                    console.error('Error initializing socket:', error);
+                }
             }
 
             async handleFormSubmit(e) {
@@ -301,7 +321,7 @@
                 
                 // Try to save to server first, fallback to localStorage
                 try {
-                    await fetch('/api/data', {
+                    const response = await fetch('/api/data', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -311,9 +331,17 @@
                             completed: JSON.parse(localStorage.getItem('completedEntries')) || []
                         })
                     });
+                    
+                    if (response.ok) {
+                        // Show success message and redirect
+                        alert('Vehicle added successfully! All devices will see this update in real-time.');
+                        window.location.href = 'workshop-view.html';
+                    }
                 } catch (error) {
                     console.error('Error saving to server:', error);
                     localStorage.setItem('workshopEntries', JSON.stringify(entries));
+                    alert('Vehicle added successfully! (Offline mode)');
+                    window.location.href = 'workshop-view.html';
                 }
                 
                 // Reset form
@@ -323,10 +351,6 @@
                 const now = new Date();
                 const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
                 this.requiredDateTimeInput.value = localDateTime;
-                
-                // Show success message and redirect
-                alert('Vehicle added successfully!');
-                window.location.href = 'workshop-view.html';
             }
         }
 
