@@ -71,6 +71,7 @@ io.on('connection', (socket) => {
     // Send current data to newly connected client
     socket.on('request-data', async () => {
         try {
+            console.log(`📤 Sending data to client: ${socket.id}`);
             const dataPath = path.join(__dirname, 'data');
             const entriesPath = path.join(dataPath, 'workshopEntries.json');
             const completedPath = path.join(dataPath, 'completedEntries.json');
@@ -79,9 +80,21 @@ io.on('connection', (socket) => {
             const completed = fs.existsSync(completedPath) ? JSON.parse(fs.readFileSync(completedPath, 'utf8')) : [];
             
             socket.emit('data-updated', { entries, completed });
+            console.log(`✅ Data sent to client: ${socket.id} - ${entries.length} entries, ${completed.length} completed`);
         } catch (error) {
             console.error('Error sending data to client:', error);
         }
+    });
+    
+    // Debug: Log all socket events
+    socket.onAny((eventName, ...args) => {
+        console.log(`🔍 Socket event [${socket.id}]: ${eventName}`, args);
+    });
+    
+    // Test connection endpoint
+    socket.on('test-connection', () => {
+        console.log(`🧪 Connection test from client: ${socket.id}`);
+        socket.emit('connection-test-response', { status: 'ok', timestamp: new Date().toISOString() });
     });
 });
 

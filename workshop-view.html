@@ -136,6 +136,30 @@
             transform: scale(1.1);
         }
 
+        .test-connection-btn {
+            position: fixed;
+            top: 20px;
+            right: 80px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .test-connection-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.1);
+        }
+
         .connection-status {
             position: fixed;
             top: 20px;
@@ -710,6 +734,7 @@
     <div class="container" id="container">
         <div class="connection-status" id="connectionStatus">🔄 Connecting...</div>
         <button class="toggle-header-btn" onclick="workshopManager.toggleHeader()" title="Toggle Header">👁️</button>
+        <button id="testConnection" class="test-connection-btn" onclick="workshopManager.testConnection()" title="Test Connection">🔌</button>
         
         <div class="header" id="header">
             <div class="header-content">
@@ -848,6 +873,7 @@
             }
 
             async initialize() {
+                console.log('🚀 Initializing workshop view...');
                 await this.loadData();
                 this.renderCards();
                 this.initializeSocket();
@@ -861,15 +887,30 @@
                         this.closeModal();
                     }
                 });
+                
+                // Test Socket.IO connection after a delay
+                setTimeout(() => {
+                    if (this.socket && !this.socket.connected) {
+                        console.log('⚠️ Socket not connected after 5 seconds, attempting reconnect...');
+                        this.socket.connect();
+                    }
+                }, 5000);
             }
 
             initializeSocket() {
                 try {
-                    this.socket = io();
+                    console.log('🔌 Initializing Socket.IO connection...');
+                    this.updateConnectionStatus('connecting');
+                    
+                    this.socket = io({
+                        transports: ['websocket', 'polling'],
+                        timeout: 20000,
+                        forceNew: true
+                    });
                     
                     // Listen for real-time updates
                     this.socket.on('data-updated', (data) => {
-                        console.log('🔄 Received real-time update');
+                        console.log('🔄 Received real-time update:', data);
                         this.entries = data.entries || [];
                         this.completedEntries = data.completed || [];
                         this.renderCards();
@@ -881,24 +922,65 @@
                     
                     // Handle connection status
                     this.socket.on('connect', () => {
-                        console.log('🔄 Connected to real-time updates');
+                        console.log('✅ Connected to real-time updates');
                         this.updateConnectionStatus('connected');
                     });
                     
-                    this.socket.on('disconnect', () => {
-                        console.log('❌ Disconnected from real-time updates');
+                    this.socket.on('connect_error', (error) => {
+                        console.error('❌ Connection error:', error);
                         this.updateConnectionStatus('disconnected');
                     });
                     
-                    this.socket.on('connect_error', () => {
-                        console.log('❌ Connection error');
+                    this.socket.on('disconnect', (reason) => {
+                        console.log('❌ Disconnected from real-time updates:', reason);
                         this.updateConnectionStatus('disconnected');
+                    });
+                    
+                    // Debug: Log all socket events
+                    this.socket.onAny((eventName, ...args) => {
+                        console.log(`🔍 Socket event: ${eventName}`, args);
+                    });
+                    
+                    // Test connection response
+                    this.socket.on('connection-test-response', (data) => {
+                        console.log('✅ Connection test successful:', data);
                     });
                     
                 } catch (error) {
                     console.error('Error initializing socket:', error);
                     this.updateConnectionStatus('disconnected');
                 }
+            }
+
+            testConnection() {
+                console.log('🔌 Testing connection...');
+                console.log('Socket object:', this.socket);
+                console.log('Socket connected:', this.socket?.connected);
+                console.log('Socket id:', this.socket?.id);
+                
+                if (this.socket) {
+                    if (this.socket.connected) {
+                        console.log('✅ Socket is connected, testing data request...');
+                        this.socket.emit('request-data');
+                        this.socket.emit('test-connection');
+                    } else {
+                        console.log('⚠️ Socket not connected, attempting to connect...');
+                        this.socket.connect();
+                    }
+                } else {
+                    console.log('❌ No socket object, reinitializing...');
+                    this.initializeSocket();
+                }
+                
+                // Also test HTTP API
+                fetch('/api/data')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('✅ HTTP API working:', data);
+                    })
+                    .catch(error => {
+                        console.error('❌ HTTP API error:', error);
+                    });
             }
 
             updateConnectionStatus(status) {
